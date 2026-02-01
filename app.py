@@ -1,5 +1,5 @@
 import email
-import cursor
+
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import mysql.connector
 from mysql.connector import Error
