@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Add Member - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div style="margin-bottom: 2rem;">
+        <a href="/members" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
+            <i class="fas fa-arrow-left"></i> Back to Members
+        </a>
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Add New Team Member
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+            Fill in the details to add a new member to your team
+        </p>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="/members/add">
+            <div class="form-group">
+                <label for="full_name" class="form-label">
+                    <i class="fas fa-user"></i> Full Name *
+                </label>
+                <input 
+                    type="text" 
+                    id="full_name" 
+                    name="full_name" 
+                    class="form-control" 
+                    required 
+                    placeholder="Enter full name"
+                    autocomplete="name"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    <i class="fas fa-envelope"></i> Email Address *
+                </label>
+                <input 
+                    type="email"
+                    id="email"
+                    name="email"
+                    class="form-control"
+                    required
+                    placeholder="example@gmail.com"
+                    pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$"
+                    title="Only Gmail addresses (@gmail.com) are allowed"
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="role" class="form-label">
+                    <i class="fas fa-briefcase"></i> Job Role *
+                </label>
+                <input 
+                    type="text" 
+                    id="role" 
+                    name="role" 
+                    class="form-control" 
+                    required 
+                    placeholder="e.g., Software Engineer, Data Analyst"
+                    autocomplete="organization-title"
+                >
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-plus-circle"></i> Add Member
+                </button>
+                <a href="/members" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05)); border-color: var(--accent-primary);">
+        <div style="display: flex; gap: 1rem;">
+            <i class="fas fa-info-circle" style="font-size: 1.5rem; color: var(--accent-primary); flex-shrink: 0;"></i>
+            <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">What happens next?</h4>
+                <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-left: 1.5rem; line-height: 1.8;">
+                    <li>Member will be added to the team database</li>
+                    <li>An audit log entry will be automatically created</li>
+                    <li>You can then assign skills to this member from their profile</li>
+                    <li>Member will appear in expert searches once skills are assigned</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation and UX enhancements
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading"></span> Adding Member...';
+    });
+
+    // Auto-focus first input
+    document.getElementById('full_name').focus();
+</script>
+{% endblock %}

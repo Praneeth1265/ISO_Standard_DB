@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+        Audit Trail
+    </h1>
+    <p style="color: var(--text-secondary); font-size: 1.1rem;">
+        Complete history of all database changes tracked by triggers
+    </p>
+</div>
+
+<!-- Filters -->
+<div class="card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fas fa-filter" style="color: var(--accent-primary);"></i>
+        Filter Logs
+    </h3>
+    
+    <form method="GET" action="/audit-logs">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="table" class="form-label">Table</label>
+                <select name="table" id="table" class="form-control">
+                    <option value="">All Tables</option>
+                    <option value="team_members" {% if table_filter == 'team_members' %}selected{% endif %}>Team Members</option>
+                    <option value="skills" {% if table_filter == 'skills' %}selected{% endif %}>Skills</option>
+                    <option value="mem_skills" {% if table_filter == 'mem_skills' %}selected{% endif %}>Member Skills</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="operation" class="form-label">Operation</label>
+                <select name="operation" id="operation" class="form-control">
+                    <option value="">All Operations</option>
+                    <option value="INSERT" {% if operation_filter == 'INSERT' %}selected{% endif %}>INSERT</option>
+                    <option value="UPDATE" {% if operation_filter == 'UPDATE' %}selected{% endif %}>UPDATE</option>
+                    <option value="DELETE" {% if operation_filter == 'DELETE' %}selected{% endif %}>DELETE</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="limit" class="form-label">Show Entries</label>
+                <select name="limit" id="limit" class="form-control">
+                    <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if limit == 100 %}selected{% endif %}>100</option>
+                    <option value="200" {% if limit == 200 %}selected{% endif %}>200</option>
+                    <option value="500" {% if limit == 500 %}selected{% endif %}>500</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Apply Filters
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Logs Table -->
+<div class="card" style="padding: 0; overflow: hidden;">
+    {% if logs %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 80px;"style = "font-size: 1.1rem;">Log ID</th>
+                    <th style = "font-size: 1.1rem;">Table</th>
+                    <th style = "font-size: 1.1rem;">Operation</th>
+                    <th style = "font-size: 1.1rem;">Record ID</th>
+                    <th style = "font-size: 1.1rem;">Old Value</th>
+                    <th style = "font-size: 1.1rem;">New Value</th>
+                    <th style = "font-size: 1.1rem;">Changed By</th>
+                    <th style = "font-size: 1.1rem;">Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>
+                        <code style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-primary);">
+                            #{{ log.log_id }}
+                        </code>
+                    </td>
+                    <td>
+                        <span class="badge {% if log.table_name == 'team_members' %}badge-primary{% elif log.table_name == 'skills' %}badge-secondary{% else %}badge-success{% endif %}">
+                            {{ log.table_name }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if log.operation_type == 'INSERT' %}badge-success{% elif log.operation_type == 'UPDATE' %}badge-warning{% else %}badge-primary{% endif %}" style="font-family: 'JetBrains Mono', monospace;">
+                            {{ log.operation_type }}
+                        </span>
+                    </td>
+                    <td>
+                        <code style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+                            {{ log.record_id }}
+                        </code>
+                    </td>
+                    <td style="max-width: 250px;">
+                        {% if log.old_value %}
+                        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); font-size: 0.9rem;">
+                            {{ log.old_value }}
+                        </div>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-style: italic;">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width: 250px;">
+                        {% if log.new_value %}
+                        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); font-size: 0.9rem;">
+                            {{ log.new_value }}
+                        </div>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-style: italic;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <code style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+                            {{ log.changed_by }}
+                        </code>
+                    </td>
+                    <td style="white-space: nowrap; color: var(--text-muted); font-size: 0.9rem;">
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                            <span>{{ log.change_date.strftime('%Y-%m-%d') }}</span>
+                            <span style="font-size: 0.85rem; opacity: 0.7;">{{ log.change_date.strftime('%H:%M:%S') }}</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Summary Footer -->
+    <div style="padding: 1.5rem; background: var(--bg-tertiary); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <div style="color: var(--text-secondary); font-size: 0.95rem;">
+            Showing {{ logs|length }} entries
+            {% if table_filter or operation_filter %}
+            <span style="color: var(--accent-primary);">(filtered)</span>
+            {% endif %}
+        </div>
+        {% if table_filter or operation_filter %}
+        <a href="/audit-logs" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Clear Filters
+        </a>
+        {% endif %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem 2rem;">
+        <i class="fas fa-history" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.3;"></i>
+        <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-secondary);">No Audit Logs Found</h3>
+        <p style="color: var(--text-muted);">
+            {% if table_filter or operation_filter %}
+            No logs match your filter criteria. Try adjusting the filters.
+            {% else %}
+            Audit logs will appear here as database changes occur
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Info Card -->
+<div class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05)); border-color: var(--accent-primary);">
+    <div style="display: flex; gap: 1rem;">
+        <i class="fas fa-info-circle" style="font-size: 1.5rem; color: var(--accent-primary); flex-shrink: 0;"></i>
+        <div>
+            <h4 style="font-weight: 600; margin-bottom: 0.5rem;">About Audit Logs</h4>
+            <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-left: 1.5rem; line-height: 1.8;">
+                <li>All changes are automatically tracked by MySQL triggers</li>
+                <li>Logs include INSERT, UPDATE, and DELETE operations</li>
+                <li>Records capture both old and new values for full traceability</li>
+                <li>Changed by field shows the database user who made the change</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

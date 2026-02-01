@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ skill.skill_name }} - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div style="margin-bottom: 2rem;">
+        <a href="/skills/{{ skill.skill_id }}" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
+            <i class="fas fa-arrow-left"></i> Back to Skill
+        </a>
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Edit Skill
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+            Update skill details for {{ skill.skill_name }}
+        </p>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="/skills/{{ skill.skill_id }}/edit">
+            <div class="form-group">
+                <label for="skill_name" class="form-label">
+                    <i class="fas fa-lightbulb"></i> Skill Name *
+                </label>
+                <input 
+                    type="text" 
+                    id="skill_name" 
+                    name="skill_name" 
+                    class="form-control" 
+                    required 
+                    value="{{ skill.skill_name }}"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="category" class="form-label">
+                    <i class="fas fa-tag"></i> Category *
+                </label>
+                <select name="category" id="category" class="form-control" required>
+                    <option value="Technical" {% if skill.category == 'Technical' %}selected{% endif %}>Technical</option>
+                    <option value="Clinical" {% if skill.category == 'Clinical' %}selected{% endif %}>Clinical</option>
+                    <option value="Soft Skill" {% if skill.category == 'Soft Skill' %}selected{% endif %}>Soft Skill</option>
+                    <option value="Regulatory" {% if skill.category == 'Regulatory' %}selected{% endif %}>Regulatory</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <a href="/skills/{{ skill.skill_id }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(239, 68, 68, 0.05)); border-color: var(--accent-warning);">
+        <div style="display: flex; gap: 1rem;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--accent-warning); flex-shrink: 0;"></i>
+            <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem; color: var(--accent-warning);">Important Note</h4>
+                <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-left: 1.5rem; line-height: 1.8;">
+                    <li>Changes will be logged in the audit trail via triggers</li>
+                    <li>All team member assignments will be updated automatically</li>
+                    <li>Proficiency levels assigned to members remain unchanged</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading"></span> Saving Changes...';
+    });
+
+    // Category selection visual feedback
+    const categorySelect = document.getElementById('category');
+    const colors = {
+        'Technical': 'var(--accent-primary)',
+        'Clinical': 'var(--accent-success)',
+        'Regulatory': 'var(--accent-warning)',
+        'Soft Skill': 'var(--accent-secondary)'
+    };
+    categorySelect.style.borderColor = colors[categorySelect.value];
+    categorySelect.addEventListener('change', function() {
+        this.style.borderColor = colors[this.value];
+    });
+</script>
+{% endblock %}

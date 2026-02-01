@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ member.full_name }} - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div style="margin-bottom: 2rem;">
+        <a href="/members/{{ member.mem_id }}" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
+            <i class="fas fa-arrow-left"></i> Back to Profile
+        </a>
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Edit Member Profile
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+            Update information for {{ member.full_name }}
+        </p>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="/members/{{ member.mem_id }}/edit">
+            <div class="form-group">
+                <label for="full_name" class="form-label">
+                    <i class="fas fa-user"></i> Full Name *
+                </label>
+                <input 
+                    type="text" 
+                    id="full_name" 
+                    name="full_name" 
+                    class="form-control" 
+                    required 
+                    value="{{ member.full_name }}"
+                    autocomplete="name"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    <i class="fas fa-envelope"></i> Email Address *
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-control" 
+                    required 
+                    value="{{ member.email }}"
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="role" class="form-label">
+                    <i class="fas fa-briefcase"></i> Job Role *
+                </label>
+                <input 
+                    type="text" 
+                    id="role" 
+                    name="role" 
+                    class="form-control" 
+                    required 
+                    value="{{ member.role }}"
+                    autocomplete="organization-title"
+                >
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <a href="/members/{{ member.mem_id }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(239, 68, 68, 0.05)); border-color: var(--accent-warning);">
+        <div style="display: flex; gap: 1rem;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--accent-warning); flex-shrink: 0;"></i>
+            <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem; color: var(--accent-warning);">Important Note</h4>
+                <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-left: 1.5rem; line-height: 1.8;">
+                    <li>All changes will be logged in the audit trail</li>
+                    <li>Skills assigned to this member will remain unchanged</li>
+                    <li>Email changes may affect integrations and notifications</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading"></span> Saving Changes...';
+    });
+</script>
+{% endblock %}

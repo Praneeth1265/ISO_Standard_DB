@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Team Members - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Team Members
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+            {{ members|length }} active team members
+        </p>
+    </div>
+    <a href="/members/add" class="btn btn-primary">
+        <i class="fas fa-user-plus"></i> Add New Member
+    </a>
+</div>
+
+{% if members %}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+    {% for member in members %}
+    <div class="card" style="position: relative; overflow: hidden;">
+        <!-- Gradient accent -->
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));"></div>
+        
+        <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
+            <!-- Avatar -->
+            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: white; flex-shrink: 0;">
+                {{ member.full_name[0] }}
+            </div>
+            
+            <div style="flex: 1; min-width: 0;">
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    {{ member.full_name }}
+                </h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                    {{ member.role }}
+                </p>
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                    <i class="fas fa-envelope"></i>
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ member.email }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills count -->
+        <div style="padding: 0.75rem; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-lightbulb" style="color: var(--accent-warning);"></i>
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">Skills</span>
+            </div>
+            <span style="font-weight: 700; font-size: 1.1rem; color: var(--accent-primary); font-family: 'JetBrains Mono', monospace;">
+                {{ member.skill_count }}
+            </span>
+        </div>
+
+        <!-- Actions -->
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="/members/{{ member.mem_id }}" class="btn btn-secondary" style="flex: 1; justify-content: center; font-size: 0.9rem;">
+                <i class="fas fa-eye"></i> View Profile
+            </a>
+            <a href="/members/{{ member.mem_id }}/edit" class="btn btn-secondary" style="padding: 0.75rem;">
+                <i class="fas fa-edit"></i>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 4rem 2rem;">
+    <i class="fas fa-users" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.3;"></i>
+    <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-secondary);">No team members yet</h3>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Get started by adding your first team member</p>
+    <a href="/members/add" class="btn btn-primary">
+        <i class="fas fa-user-plus"></i> Add First Member
+    </a>
+</div>
+{% endif %}
+{% endblock %}

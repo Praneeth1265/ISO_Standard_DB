@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Add Skill - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div style="margin-bottom: 2rem;">
+        <a href="/skills" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
+            <i class="fas fa-arrow-left"></i> Back to Skills
+        </a>
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Add New Skill
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+            Add a new skill to your organization's catalog
+        </p>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="/skills/add">
+            <div class="form-group">
+                <label for="skill_name" class="form-label">
+                    <i class="fas fa-lightbulb"></i> Skill Name *
+                </label>
+                <input 
+                    type="text" 
+                    id="skill_name" 
+                    name="skill_name" 
+                    class="form-control" 
+                    required 
+                    placeholder="e.g., Python Programming, Clinical Data Analysis"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="category" class="form-label">
+                    <i class="fas fa-tag"></i> Category *
+                </label>
+                <select name="category" id="category" class="form-control" required>
+                    <option value="">Choose a category...</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Category Descriptions -->
+            <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem;">
+                <h4 style="font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-info-circle" style="color: var(--accent-primary);"></i>
+                    Category Guidelines
+                </h4>
+                <div style="display: grid; gap: 1rem;">
+                    <div>
+                        <strong style="color: var(--accent-primary);">Technical:</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Programming languages, software tools, databases, frameworks</span>
+                    </div>
+                    <div>
+                        <strong style="color: var(--accent-success);">Clinical:</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Medical knowledge, patient care, clinical analysis, healthcare protocols</span>
+                    </div>
+                    <div>
+                        <strong style="color: var(--accent-warning);">Regulatory:</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Compliance standards (ISO, FDA, IEC), quality assurance, validation</span>
+                    </div>
+                    <div>
+                        <strong style="color: var(--accent-secondary);">Soft Skill:</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Communication, leadership, project management, teamwork</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-plus-circle"></i> Add Skill
+                </button>
+                <a href="/skills" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading"></span> Adding Skill...';
+    });
+
+    // Auto-focus first input
+    document.getElementById('skill_name').focus();
+
+    // Category selection visual feedback
+    const categorySelect = document.getElementById('category');
+    categorySelect.addEventListener('change', function() {
+        const colors = {
+            'Technical': 'var(--accent-primary)',
+            'Clinical': 'var(--accent-success)',
+            'Regulatory': 'var(--accent-warning)',
+            'Soft Skill': 'var(--accent-secondary)'
+        };
+        this.style.borderColor = colors[this.value] || 'var(--border-color)';
+    });
+</script>
+{% endblock %}

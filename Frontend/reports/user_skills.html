@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3"> Skill Assignment</h2>
+
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th style="font-size: 1.1rem;">User</th>
+                <th style="font-size: 1.1rem;">Email</th>
+                <th style="font-size: 1.1rem;">Role</th>
+                <th style="font-size: 1.1rem;">Skills</th>
+                <th style="font-size: 1.1rem;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in report %}
+            <tr>
+                <td>{{ row.full_name }}</td>
+                <td>{{ row.email }}</td>
+                <td>{{ row.role }}</td>
+                <td>
+                    {% if row.skills %}
+                        {{ row.skills }}
+                    {% else %}
+                        <span class="text-muted">No skills assigned</span>
+                    {% endif %}
+                </td>
+                 <td class="text-center">
+        <a href="{{ url_for('view_member', mem_id=row.mem_id) }}"
+           class="btn btn-secondary btn-sm"
+           title="View Profile">
+            <i class="fas fa-user"></i>
+        </a>
+     </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

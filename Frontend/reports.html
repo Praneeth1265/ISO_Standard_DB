@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Team Skills Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1><i class="bi bi-bar-chart-fill"></i> Team Skills Reports</h1>
+        <p class="text-muted">Analytics and insights about your team's skills</p>
+    </div>
+</div>
+
+<!-- Skills by Category -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Skills Distribution by Category</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Total Skills</th>
+                                <th>Members with Skills</th>
+                                <th>Distribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in category_stats %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-{{ 
+                                        'primary' if stat.category == 'Technical' 
+                                        else 'success' if stat.category == 'Clinical' 
+                                        else 'warning' if stat.category == 'Soft Skill' 
+                                        else 'danger' }}">
+                                        {{ stat.category }}
+                                    </span>
+                                </td>
+                                <td><strong>{{ stat.skill_count }}</strong></td>
+                                <td>{{ stat.members_with_skills }}</td>
+                                <td>
+                                    <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar" style="width: {{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}%">
+                                            {{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Skills -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-trophy-fill"></i> Top 10 Most Common Skills</h5>
+            </div>
+            <div class="card-body">
+                {% if top_skills %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Skill Name</th>
+                                <th>Category</th>
+                                <th>Team Members</th>
+                                <th>Avg Proficiency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for skill in top_skills %}
+                            <tr>
+                                <td>
+                                    <strong>{{ loop.index }}</strong>
+                                </td>
+                                <td><strong>{{ skill.skill_name }}</strong></td>
+                                <td>
+                                    <span class="badge bg-{{ 
+                                        'primary' if skill.category == 'Technical' 
+                                        else 'success' if skill.category == 'Clinical' 
+                                        else 'warning' if skill.category == 'Soft Skill' 
+                                        else 'danger' }}">
+                                        {{ skill.category }}
+                                    </span>
+                                </td>
+                                <td><span class="badge bg-info">{{ skill.member_count }}</span></td>
+                                <td>
+                                    <div class="progress" style="height: 20px; width: 120px;">
+                                        <div class="progress-bar bg-success" style="width: {{ skill.avg_proficiency * 20 }}%">
+                                            {{ "%.1f"|format(skill.avg_proficiency) }}/5
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center my-3">No skills data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Member Statistics -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-people-fill"></i> Team Member Skills Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Team Member</th>
+                                <th>Role</th>
+                                <th>Total Skills</th>
+                                <th>Average Proficiency</th>
+                                <th>Skill Coverage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in member_stats %}
+                            <tr>
+                                <td><strong>{{ member.full_name }}</strong></td>
+                                <td><span class="badge bg-secondary">{{ member.role }}</span></td>
+                                <td><span class="badge bg-primary">{{ member.skill_count }}</span></td>
+                                <td>
+                                    {% if member.avg_proficiency %}
+                                    <div class="progress" style="height: 20px; width: 120px;">
+                                        <div class="progress-bar" style="width: {{ member.avg_proficiency * 20 }}%">
+                                            {{ "%.1f"|format(member.avg_proficiency) }}/5
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted">No skills</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-info" 
+                                             style="width: {{ (member.skill_count / top_skills|length * 100)|round if top_skills else 0 }}%">
+                                            {{ member.skill_count }} skills
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ skill.skill_name }} - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <a href="/skills" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
+        <i class="fas fa-arrow-left"></i> Back to Skills
+    </a>
+</div>
+
+<!-- Skill Header -->
+<div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, {% if skill.category == 'Technical' %}rgba(0, 217, 255, 0.05){% elif skill.category == 'Clinical' %}rgba(16, 185, 129, 0.05){% elif skill.category == 'Regulatory' %}rgba(245, 158, 11, 0.05){% else %}rgba(124, 58, 237, 0.05){% endif %}, transparent);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 0;">
+            <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">
+                {{ skill.skill_name }}
+            </h1>
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <span class="badge {% if skill.category == 'Technical' %}badge-primary{% elif skill.category == 'Clinical' %}badge-success{% elif skill.category == 'Regulatory' %}badge-warning{% else %}badge-secondary{% endif %}" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                    {{ skill.category }}
+                </span>
+                <div style="color: var(--text-secondary); font-size: 0.95rem;">
+                    <i class="fas fa-users"></i> {{ members|length }} team member{% if members|length != 1 %}s{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="/skills/{{ skill.skill_id }}/edit" class="btn btn-secondary">
+                <i class="fas fa-edit"></i> Edit Skill
+            </a>
+            <button onclick="confirmDelete()" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Team Members with This Skill -->
+<div class="card">
+    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fas fa-users" style="color: var(--accent-primary);"></i>
+        Team Members ({{ members|length }})
+    </h2>
+
+    {% if members %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Proficiency Level</th>
+                    <th>Last Updated</th>
+                    <th style="text-align: right;">Contact</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                <tr style="cursor: pointer;" onclick="window.location='/members/{{ member.mem_id }}'">
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; flex-shrink: 0;">
+                                {{ member.full_name[0] }}
+                            </div>
+                            <strong>{{ member.full_name }}</strong>
+                        </div>
+                    </td>
+                    <td style="color: var(--text-secondary);">
+                        {{ member.role }}
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="flex: 1; max-width: 120px; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                                <div style="height: 100%; background: linear-gradient(90deg, {% if skill.category == 'Technical' %}var(--accent-primary){% elif skill.category == 'Clinical' %}var(--accent-success){% elif skill.category == 'Regulatory' %}var(--accent-warning){% else %}var(--accent-secondary){% endif %}, {% if skill.category == 'Technical' %}var(--accent-secondary){% elif skill.category == 'Clinical' %}var(--accent-primary){% elif skill.category == 'Regulatory' %}var(--accent-danger){% else %}var(--accent-primary){% endif %}); width: {{ (member.proficiency_level / 10 * 100) | int }}%; transition: width 0.3s ease;"></div>
+                            </div>
+                            <span style="font-weight: 700; font-family: 'JetBrains Mono', monospace; color: {% if skill.category == 'Technical' %}var(--accent-primary){% elif skill.category == 'Clinical' %}var(--accent-success){% elif skill.category == 'Regulatory' %}var(--accent-warning){% else %}var(--accent-secondary){% endif %}; min-width: 30px;">
+                                {{ member.proficiency_level }}/10
+                            </span>
+                        </div>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.9rem;">
+                        {{ member.updated_at.strftime('%Y-%m-%d') }}
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="mailto:{{ member.email }}" style="color: var(--accent-primary); text-decoration: none;" onclick="event.stopPropagation();">
+                            <i class="fas fa-envelope"></i> {{ member.email }}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <i class="fas fa-user-slash" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+        <p>No team members have this skill yet</p>
+        <a href="/members" class="btn btn-secondary" style="margin-top: 1rem;">
+            <i class="fas fa-users"></i> View Members
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<form method="POST" action="/skills/{{ skill.skill_id }}/delete" id="deleteForm" style="display: none;">
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmDelete() {
+        if (confirm('Are you sure you want to delete "{{ skill.skill_name }}"? This will remove it from all team members.')) {
+            document.getElementById('deleteForm').submit();
+        }
+    }
+</script>
+{% endblock %}

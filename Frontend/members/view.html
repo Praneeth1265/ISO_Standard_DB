@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}{{ member.full_name }} - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <a href="/members" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
+        <i class="fas fa-arrow-left"></i> Back to Members
+    </a>
+</div>
+
+<!-- Member Header -->
+<div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05));">
+    <div style="display: flex; align-items: flex-start; gap: 2rem; flex-wrap: wrap;">
+        <!-- Avatar -->
+        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; color: white; flex-shrink: 0; box-shadow: var(--shadow-lg);">
+            {{ member.full_name[0] }}
+        </div>
+        
+        <div style="flex: 1; min-width: 0;">
+            <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">
+                {{ member.full_name }}
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1rem;">
+                {{ member.role }}
+            </p>
+            <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-muted);">
+                <i class="fas fa-envelope"></i>
+                <a href="mailto:{{ member.email }}" style="color: var(--accent-primary); text-decoration: none;">
+                    {{ member.email }}
+                </a>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="/members/{{ member.mem_id }}/edit" class="btn btn-secondary">
+                <i class="fas fa-edit"></i> Edit Profile
+            </a>
+            <button onclick="confirmDelete()" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Skills Section -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+    <!-- Current Skills -->
+    <div class="card">
+        <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-lightbulb" style="color: var(--accent-warning);"></i>
+            Skills ({{ skills|length }})
+        </h2>
+
+        {% if skills %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for skill in skills %}
+            <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; transition: all 0.3s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">
+                            {{ skill.skill_name }}
+                        </h3>
+                        <span class="badge {% if skill.category == 'Technical' %}badge-primary{% elif skill.category == 'Clinical' %}badge-success{% elif skill.category == 'Regulatory' %}badge-warning{% else %}badge-secondary{% endif %}">
+                            {{ skill.category }}
+                        </span>
+                    </div>
+                    <form method="POST" action="/members/{{ member.mem_id }}/skills/{{ skill.skill_id }}/delete" style="display: inline;">
+                        <button type="submit" class="btn btn-danger" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;" onclick="return confirm('Remove this skill?')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Proficiency Level -->
+                <form method="POST" action="/members/{{ member.mem_id }}/skills/{{ skill.skill_id }}/update">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <label style="color: var(--text-secondary); font-size: 0.9rem; white-space: nowrap;">
+                            Proficiency:
+                        </label>
+                        <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
+                            <input 
+                                type="range" 
+                                name="proficiency_level" 
+                                min="1" 
+                                max="5" 
+                                value="{{ skill.proficiency_level }}" 
+                                style="flex: 1; accent-color: var(--accent-primary);"
+                                oninput="this.nextElementSibling.textContent = this.value; this.form.querySelector('button').disabled = false;"
+                            >
+                            <span style="font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-primary); min-width: 30px; text-align: center; font-size: 1.1rem;">
+                                {{ skill.proficiency_level }}
+                            </span>
+                        </div>
+                        <button type="submit" class="btn btn-success" style="padding: 0.5rem 1rem; font-size: 0.85rem;" disabled>
+                            <i class="fas fa-check"></i> Save
+                        </button>
+                    </div>
+                </form>
+
+                <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+                    <i class="fas fa-clock"></i> Updated: {{ skill.updated_at.strftime('%Y-%m-%d') }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+            <i class="fas fa-lightbulb" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+            <p>No skills assigned yet</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Add New Skill -->
+    <div class="card" style="height: fit-content; position: sticky; top: 100px;">
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-plus-circle" style="color: var(--accent-success);"></i>
+            Add Skill
+        </h3>
+
+        {% if available_skills %}
+        <form method="POST" action="/members/{{ member.mem_id }}/skills/add">
+            <div class="form-group">
+                <label for="skill_id" class="form-label">Select Skill</label>
+                <select name="skill_id" id="skill_id" class="form-control" required>
+                    <option value="">Choose a skill...</option>
+                    {% for skill in available_skills %}
+                    <option value="{{ skill.skill_id }}">{{ skill.skill_name }} ({{ skill.category }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="proficiency_level" class="form-label">
+                    Proficiency Level: <span id="proficiency_display" style="color: var(--accent-primary); font-weight: 700; font-family: 'JetBrains Mono', monospace;">5</span>
+                </label>
+                <input 
+                    type="range" 
+                    name="proficiency_level" 
+                    id="proficiency_level" 
+                    min="1" 
+                    max="5" 
+                    value="3" 
+                    class="form-control"
+                    style="accent-color: var(--accent-primary);"
+                    oninput="document.getElementById('proficiency_display').textContent = this.value"
+                >
+                <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
+                    <span>Beginner</span>
+                    <span>Expert</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                <i class="fas fa-plus"></i> Add Skill
+            </button>
+        </form>
+        {% else %}
+        <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
+            <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--accent-success); margin-bottom: 0.75rem;"></i>
+            <p>All available skills assigned!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<form method="POST" action="/members/{{ member.mem_id }}/delete" id="deleteForm" style="display: none;">
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmDelete() {
+        if (confirm('Are you sure you want to delete {{ member.full_name }}? This action cannot be undone and will remove all associated skills.')) {
+            document.getElementById('deleteForm').submit();
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+        Team Skills Dashboard
+    </h1>
+    <p style="color: var(--text-secondary); font-size: 1.3rem;">
+        Comprehensive overview of team capabilities and skill distribution
+    </p>
+</div>
+
+<!-- Stats Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+    <!-- Total Members -->
+    <div class="card" style="background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(0, 217, 255, 0.02));">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <p style="color: var(--text-secondary); font-size: 1.1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+                    Team Members
+                </p>
+                <h2 style="font-size: 2.5rem; font-weight: 700; color: var(--accent-primary); font-family: 'JetBrains Mono', monospace;">
+                    {{ stats.total_members }}
+                </h2>
+            </div>
+            <div style="width: 60px; height: 60px; background: rgba(0, 217, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-primary);">
+                <i class="fas fa-users" style="font-size: 1.75rem; color: var(--accent-primary);"></i>
+            </div>
+        </div>
+        <a href="/members" class="btn btn-secondary" style="margin-top: 1.5rem; width: 100%; justify-content: center;">
+            <i class="fas fa-arrow-right"></i> View All Members
+        </a>
+    </div>
+
+    <!-- Total Skills -->
+    <div class="card" style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(124, 58, 237, 0.02));">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <p style="color: var(--text-secondary); font-size: 1.1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+                    Skill Catalog
+                </p>
+                <h2 style="font-size: 2.5rem; font-weight: 700; color: var(--accent-secondary); font-family: 'JetBrains Mono', monospace;">
+                    {{ stats.total_skills }}
+                </h2>
+            </div>
+            <div style="width: 60px; height: 60px; background: rgba(124, 58, 237, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-secondary);">
+                <i class="fas fa-lightbulb" style="font-size: 1.75rem; color: var(--accent-secondary);"></i>
+            </div>
+        </div>
+        <a href="/skills" class="btn btn-secondary" style="margin-top: 1.5rem; width: 100%; justify-content: center;">
+            <i class="fas fa-arrow-right"></i> View All Skills
+        </a>
+    </div>
+
+    <!-- Total Assignments -->
+    <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <p style="color: var(--text-secondary); font-size: 1.1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+                    Skill Assignments
+                </p>
+                <h2 style="font-size: 2.5rem; font-weight: 700; color: var(--accent-success); font-family: 'JetBrains Mono', monospace;">
+                    {{ stats.total_assignments }}
+                </h2>
+            </div>
+            <div style="width: 60px; height: 60px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-success);">
+                <i class="fas fa-link" style="font-size: 1.75rem; color: var(--accent-success);"></i>
+            </div>
+        </div>
+        <a href="{{ url_for('user_skills_report') }}" class="btn btn-secondary" style="margin-top: 1.5rem; width: 100%; justify-content: center;">
+            <i class="fas fa-arrow-right"></i> View Reports
+        </a>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fas fa-bolt" style="color: var(--accent-primary);"></i>
+        Quick Actions
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <a href="/members/add" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Add Member
+        </a>
+        <a href="/skills/add" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Add Skill
+        </a>
+        <a href="/find-experts" class="btn btn-success">
+            <i class="fas fa-search"></i> Find Experts
+        </a>
+        <a href="/reports" class="btn btn-secondary">
+            <i class="fas fa-chart-line"></i> Analytics
+        </a>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+{% if stats.recent_logs %}
+<div class="card">
+    <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fas fa-history" style="color: var(--accent-warning);"></i>
+        Recent Activity
+    </h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="font-size: 1.1rem;">Table</th>
+                    <th style="font-size: 1.1rem;">Operation</th>
+                    <th style="font-size: 1.1rem;">Details</th>
+                    <th style="font-size: 1.1rem;">Changed By</th>
+                    <th style="font-size: 1.1rem;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in stats.recent_logs %}
+                <tr>
+                    <td>
+                        <span class="badge badge-secondary">{{ log.table_name }}</span>
+                    </td>
+                    <td>
+                        <span class="badge {% if log.operation_type == 'INSERT' %}badge-success{% elif log.operation_type == 'UPDATE' %}badge-warning{% else %}badge-primary{% endif %}">
+                            {{ log.operation_type }}
+                        </span>
+                    </td>
+                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ log.new_value or log.old_value }}
+                    </td>
+                    <td>
+                        <code style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+                            {{ log.changed_by }}
+                        </code>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.9rem;">
+                        {{ log.change_date.strftime('%Y-%m-%d %H:%M') }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div style="margin-top: 1rem; text-align: center;">
+        <a href="/audit-logs" class="btn btn-secondary">
+            <i class="fas fa-list"></i> View All Logs
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
