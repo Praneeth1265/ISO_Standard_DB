@@ -1,39 +1,42 @@
 -- TRIGGERS (9) --
 
 DELIMITER //
--- INSERT MEM
+
+-- INSERT MEMBER
 CREATE TRIGGER after_member_insert
 AFTER INSERT ON team_members
 FOR EACH ROW
 BEGIN
     INSERT INTO audit_logs (table_name, operation_type, record_id, old_value, new_value, changed_by)
-    VALUES ('team_members', 'INSERT', NEW.mem_id, NULL, CONCAT('Name: ', NEW.full_name, ', Role: ', NEW.role), USER());
+    VALUES ('team_members', 'INSERT', NEW.mem_id, NULL, 
+            CONCAT('Name: ', NEW.first_name, ' ', NEW.last_name, ', RoleID: ', IFNULL(NEW.role_id, 'None'), ', Phone: ', NEW.phone_no), USER());
 END //
 
 DELIMITER ;
 
 DELIMITER //
--- UPDATE MEM
+-- UPDATE MEMBER
 CREATE TRIGGER after_member_update
 AFTER UPDATE ON team_members
 FOR EACH ROW
 BEGIN
     INSERT INTO audit_logs (table_name, operation_type, record_id, old_value, new_value, changed_by)
     VALUES ('team_members', 'UPDATE', NEW.mem_id, 
-            CONCAT('Name: ', OLD.full_name, ', Role: ', OLD.role), 
-            CONCAT('Name: ', NEW.full_name, ', Role: ', NEW.role), USER());
-END// 
+            CONCAT('Name: ', OLD.first_name, ' ', OLD.last_name, ', RoleID: ', IFNULL(OLD.role_id, 'None')), 
+            CONCAT('Name: ', NEW.first_name, ' ', NEW.last_name, ', RoleID: ', IFNULL(NEW.role_id, 'None')), USER());
+END //
 
 DELIMITER ;
 
 DELIMITER //
--- DLT MEM
+-- DELETE MEMBER
 CREATE TRIGGER after_member_delete
 AFTER DELETE ON team_members
 FOR EACH ROW
 BEGIN
     INSERT INTO audit_logs (table_name, operation_type, record_id, old_value, new_value, changed_by)
-    VALUES ('team_members', 'DELETE', OLD.mem_id, CONCAT('Name: ', OLD.full_name, ', Role: ', OLD.role), NULL, USER());
+    VALUES ('team_members', 'DELETE', OLD.mem_id, 
+            CONCAT('Name: ', OLD.first_name, ' ', OLD.last_name, ', Email: ', OLD.email), NULL, USER());
 END //
 
 DELIMITER ;
@@ -119,6 +122,68 @@ BEGIN
 END //
 DELIMITER ;
 
+DELIMITER //
+
+-- INSERT ROLE
+CREATE TRIGGER after_role_insert
+AFTER INSERT ON roles
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_logs (table_name, operation_type, record_id, old_value, new_value, changed_by)
+    VALUES ('roles', 'INSERT', NEW.role_id, NULL, 
+            CONCAT('Role: ', NEW.role_name), USER());
+END //
+DELIMITER ;
+
+DELIMITER //
+-- UPDATE ROLE
+CREATE TRIGGER after_role_update
+AFTER UPDATE ON roles
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_logs (table_name, operation_type, record_id, old_value, new_value, changed_by)
+    VALUES ('roles', 'UPDATE', NEW.role_id, 
+            CONCAT('Role: ', OLD.role_name), 
+            CONCAT('Role: ', NEW.role_name), USER());
+END //
+DELIMITER ;
+
+DELIMITER //
+-- DELETE ROLE
+CREATE TRIGGER after_role_delete
+AFTER DELETE ON roles
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_logs (table_name, operation_type, record_id, old_value, new_value, changed_by)
+    VALUES ('roles', 'DELETE', OLD.role_id, 
+            CONCAT('Role: ', OLD.role_name), NULL, USER());
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER validate_role_eligibility
+BEFORE UPDATE ON team_members
+FOR EACH ROW
+BEGIN
+    DECLARE missing_skills INT;
+
+    -- Check if the new role has requirements the user doesn't meet
+    SELECT COUNT(*) INTO missing_skills
+    FROM role_requirements rr
+    LEFT JOIN mem_skills ms ON rr.skill_id = ms.skill_id AND ms.mem_id = NEW.mem_id
+    WHERE rr.role_id = NEW.role_id
+    AND (ms.skill_id IS NULL OR ms.proficiency_level < rr.min_proficiency_required);
+
+    -- If there are missing or insufficient skills, block the update
+    IF missing_skills > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Ineligible for Role: Member does not meet the minimum skill requirements for this role.';
+    END IF;
+END //
+
+DELIMITER ;
 
 -- PROCEDURES -- 
 
