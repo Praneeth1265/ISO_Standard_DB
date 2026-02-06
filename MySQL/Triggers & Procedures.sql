@@ -186,49 +186,67 @@ END //
 DELIMITER ;
 
 -- PROCEDURES -- 
-
 DELIMITER //
--- EXPERTS
+
+-- 1. Find Experts
 CREATE PROCEDURE Find_Experts_For_Project(
-    IN p_selected_skill VARCHAR(50),  -- Input from the Skill Dropdown
-    IN p_min_proficiency INT          -- Input from the Level Dropdown (e.g., 7)
+    IN p_selected_skill VARCHAR(50),
+    IN p_min_proficiency INT
 )
 BEGIN
-    -- Select the necessary details joining all 3 tables
     SELECT 
-        tm.full_name AS 'Team Member',
-        tm.role AS 'Job Role',
+        CONCAT_WS(' ', tm.first_name, NULLIF(tm.middle_name, ''), tm.last_name) AS 'Team Member',
+        r.role_name AS 'Job Role',
         s.skill_name AS 'Skill',
         ms.proficiency_level AS 'Proficiency',
-        tm.email AS 'Contact Email'
+        tm.email AS 'Contact Email',
+        tm.phone_no AS 'Phone'
     FROM team_members tm
+    LEFT JOIN roles r ON tm.role_id = r.role_id
     JOIN mem_skills ms ON tm.mem_id = ms.mem_id
     JOIN skills s ON ms.skill_id = s.skill_id
     WHERE 
-        s.skill_name = p_selected_skill  -- Matches the chosen skill
-        AND ms.proficiency_level >= p_min_proficiency -- Filters for quality
-    ORDER BY 
-        ms.proficiency_level DESC; -- Shows best candidates first
+        s.skill_name = p_selected_skill 
+        AND ms.proficiency_level >= p_min_proficiency
+    ORDER BY ms.proficiency_level DESC;
 END //
-
 DELIMITER ;
 
 DELIMITER //
--- MEM PROFILE
+-- 2. Member Profile
 CREATE PROCEDURE Get_Member_Profile(
     IN p_member_email VARCHAR(100)
 )
 BEGIN
     SELECT 
-        tm.full_name,
-        tm.role,
+        CONCAT_WS(' ', tm.first_name, NULLIF(tm.middle_name, ''), tm.last_name) AS full_name,
+        tm.phone_no,
+        r.role_name,
         s.skill_name,
         s.category,
-        ms.proficiency_level
+        ms.proficiency_level,
+        ms.updated_at
     FROM team_members tm
+    LEFT JOIN roles r ON tm.role_id = r.role_id
     LEFT JOIN mem_skills ms ON tm.mem_id = ms.mem_id
     LEFT JOIN skills s ON ms.skill_id = s.skill_id
     WHERE tm.email = p_member_email;
 END //
 
+DELIMITER ;
+
+DELIMITER //
+-- 3. Check Eligibility
+CREATE PROCEDURE Get_Eligible_Roles_For_Member(IN p_mem_id INT)
+BEGIN
+    SELECT r.role_id, r.role_name
+    FROM roles r
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM role_requirements rr
+        LEFT JOIN mem_skills ms ON rr.skill_id = ms.skill_id AND ms.mem_id = p_mem_id
+        WHERE rr.role_id = r.role_id
+        AND (ms.skill_id IS NULL OR ms.proficiency_level < rr.min_proficiency_required)
+    );
+END //
 DELIMITER ;
