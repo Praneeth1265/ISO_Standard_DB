@@ -3,170 +3,240 @@
 {% block title %}Reports - Team Skills Management{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <h1><i class="bi bi-bar-chart-fill"></i> Team Skills Reports</h1>
-        <p class="text-muted">Analytics and insights about your team's skills</p>
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 250px;">
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+            <i class="fas fa-chart-bar"></i> Team Skills Reports
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+            Analytics and insights about your team's skills
+        </p>
     </div>
+    <button onclick="exportToCSV()" class="btn btn-primary" style="margin-top: 0.5rem; white-space: nowrap;">
+        <i class="fas fa-download"></i> Export to CSV
+    </button>
 </div>
 
 <!-- Skills by Category -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Skills Distribution by Category</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Total Skills</th>
-                                <th>Members with Skills</th>
-                                <th>Distribution</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for stat in category_stats %}
-                            <tr>
-                                <td>
-                                    <span class="badge bg-{{ 
-                                        'primary' if stat.category == 'Technical' 
-                                        else 'success' if stat.category == 'Clinical' 
-                                        else 'warning' if stat.category == 'Soft Skill' 
-                                        else 'danger' }}">
-                                        {{ stat.category }}
-                                    </span>
-                                </td>
-                                <td><strong>{{ stat.skill_count }}</strong></td>
-                                <td>{{ stat.members_with_skills }}</td>
-                                <td>
-                                    <div class="progress" style="height: 25px;">
-                                        <div class="progress-bar" style="width: {{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}%">
-                                            {{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}%
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color);">
+        <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-chart-pie" style="color: var(--accent-primary);"></i>
+            Skills Distribution by Category
+        </h3>
+    </div>
+    <div style="padding: 1.5rem;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;" id="categoryTable">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Category</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Total Skills</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Members with Skills</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Distribution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in category_stats %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 1rem;">
+                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; 
+                                background: {% if stat.category == 'Technical' %}rgba(0, 217, 255, 0.15); color: var(--accent-primary)
+                                {% elif stat.category == 'Clinical' %}rgba(16, 185, 129, 0.15); color: var(--accent-success)
+                                {% elif stat.category == 'Soft Skill' %}rgba(124, 58, 237, 0.15); color: var(--accent-secondary)
+                                {% else %}rgba(245, 158, 11, 0.15); color: var(--accent-warning){% endif %};">
+                                {{ stat.category }}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem;"><strong>{{ stat.skill_count }}</strong></td>
+                        <td style="padding: 1rem;">{{ stat.members_with_skills }}</td>
+                        <td style="padding: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="flex: 1; max-width: 200px; height: 25px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--border-color);">
+                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-success)); width: {{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}%;"></div>
+                                </div>
+                                <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary); white-space: nowrap; min-width: 40px;">
+                                    {{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}%
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 <!-- Top Skills -->
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="bi bi-trophy-fill"></i> Top 10 Most Common Skills</h5>
-            </div>
-            <div class="card-body">
-                {% if top_skills %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Skill Name</th>
-                                <th>Category</th>
-                                <th>Team Members</th>
-                                <th>Avg Proficiency</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for skill in top_skills %}
-                            <tr>
-                                <td>
-                                    <strong>{{ loop.index }}</strong>
-                                </td>
-                                <td><strong>{{ skill.skill_name }}</strong></td>
-                                <td>
-                                    <span class="badge bg-{{ 
-                                        'primary' if skill.category == 'Technical' 
-                                        else 'success' if skill.category == 'Clinical' 
-                                        else 'warning' if skill.category == 'Soft Skill' 
-                                        else 'danger' }}">
-                                        {{ skill.category }}
-                                    </span>
-                                </td>
-                                <td><span class="badge bg-info">{{ skill.member_count }}</span></td>
-                                <td>
-                                    <div class="progress" style="height: 20px; width: 120px;">
-                                        <div class="progress-bar bg-success" style="width: {{ skill.avg_proficiency * 20 }}%">
-                                            {{ "%.1f"|format(skill.avg_proficiency) }}/5
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="text-muted text-center my-3">No skills data available</p>
-                {% endif %}
-            </div>
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color);">
+        <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-trophy" style="color: var(--accent-success);"></i>
+            Top 10 Most Common Skills
+        </h3>
+    </div>
+    <div style="padding: 1.5rem;">
+        {% if top_skills %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;" id="topSkillsTable">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Rank</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Skill Name</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Category</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Team Members</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Avg Proficiency</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for skill in top_skills %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 1rem;"><strong>{{ loop.index }}</strong></td>
+                        <td style="padding: 1rem;"><strong>{{ skill.skill_name }}</strong></td>
+                        <td style="padding: 1rem;">
+                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; white-space: nowrap;
+                                background: {% if skill.category == 'Technical' %}rgba(0, 217, 255, 0.15); color: var(--accent-primary)
+                                {% elif skill.category == 'Clinical' %}rgba(16, 185, 129, 0.15); color: var(--accent-success)
+                                {% elif skill.category == 'Soft Skill' %}rgba(124, 58, 237, 0.15); color: var(--accent-secondary)
+                                {% else %}rgba(245, 158, 11, 0.15); color: var(--accent-warning){% endif %};">
+                                {{ skill.category }}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(0, 217, 255, 0.15); color: var(--accent-primary); font-weight: 600; font-size: 0.9rem;">
+                                {{ skill.member_count }}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="flex: 1; max-width: 100px; height: 20px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--border-color);">
+                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--accent-success), var(--accent-primary)); width: {{ (skill.avg_proficiency / 3 * 100) | int }}%;"></div>
+                                </div>
+                                <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); white-space: nowrap; min-width: 30px;">
+                                    {{ "%.1f"|format(skill.avg_proficiency) }}/3
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+        {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">No skills data available</p>
+        {% endif %}
     </div>
 </div>
 
 <!-- Team Member Statistics -->
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="bi bi-people-fill"></i> Team Member Skills Statistics</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Team Member</th>
-                                <th>Role</th>
-                                <th>Total Skills</th>
-                                <th>Average Proficiency</th>
-                                <th>Skill Coverage</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for member in member_stats %}
-                            <tr>
-                                <td><strong>{{ member.full_name }}</strong></td>
-                                <td><span class="badge bg-secondary">{{ member.role }}</span></td>
-                                <td><span class="badge bg-primary">{{ member.skill_count }}</span></td>
-                                <td>
-                                    {% if member.avg_proficiency %}
-                                    <div class="progress" style="height: 20px; width: 120px;">
-                                        <div class="progress-bar" style="width: {{ member.avg_proficiency * 20 }}%">
-                                            {{ "%.1f"|format(member.avg_proficiency) }}/5
-                                        </div>
-                                    </div>
-                                    {% else %}
-                                    <span class="text-muted">No skills</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar bg-info" 
-                                             style="width: {{ (member.skill_count / top_skills|length * 100)|round if top_skills else 0 }}%">
-                                            {{ member.skill_count }} skills
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+<div class="card">
+    <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color);">
+        <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-users" style="color: var(--accent-primary);"></i>
+            Team Member Skills Statistics
+        </h3>
+    </div>
+    <div style="padding: 1.5rem;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;" id="memberStatsTable">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Team Member</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Role</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Total Skills</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Average Proficiency</th>
+                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Skill Coverage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in member_stats %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 1rem;"><strong>{{ member.full_name }}</strong></td>
+                        <td style="padding: 1rem;">
+                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(124, 58, 237, 0.15); color: var(--accent-secondary); font-weight: 600; font-size: 0.9rem; white-space: nowrap;">
+                                {{ member.role }}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(0, 217, 255, 0.15); color: var(--accent-primary); font-weight: 600; font-size: 0.9rem;">
+                                {{ member.skill_count }}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem;">
+                            {% if member.avg_proficiency %}
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="flex: 1; max-width: 100px; height: 20px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--border-color);">
+                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-success)); width: {{ (member.avg_proficiency / 3 * 100) | int }}%;"></div>
+                                </div>
+                                <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); white-space: nowrap; min-width: 30px;">
+                                    {{ "%.1f"|format(member.avg_proficiency) }}/3
+                                </span>
+                            </div>
+                            {% else %}
+                            <span style="color: var(--text-muted);">No skills</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="flex: 1; max-width: 150px; height: 20px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--border-color);">
+                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); width: {{ (member.skill_count / top_skills|length * 100)|round if top_skills else 0 }}%;"></div>
+                                </div>
+                                <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); white-space: nowrap;">
+                                    {{ member.skill_count }} skills
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportToCSV() {
+    let csv = [];
+    
+    // Skills Distribution by Category
+    csv.push('Skills Distribution by Category');
+    csv.push('Category,Total Skills,Members with Skills,Distribution %');
+    {% for stat in category_stats %}
+    csv.push('"{{ stat.category }}",{{ stat.skill_count }},{{ stat.members_with_skills }},{{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}');
+    {% endfor %}
+    csv.push('');
+    
+    // Top 10 Most Common Skills
+    csv.push('Top 10 Most Common Skills');
+    csv.push('Rank,Skill Name,Category,Team Members,Avg Proficiency');
+    {% for skill in top_skills %}
+    csv.push('{{ loop.index }},"{{ skill.skill_name }}","{{ skill.category }}",{{ skill.member_count }},{{ "%.1f"|format(skill.avg_proficiency) }}');
+    {% endfor %}
+    csv.push('');
+    
+    // Team Member Skills Statistics
+    csv.push('Team Member Skills Statistics');
+    csv.push('Team Member,Role,Total Skills,Average Proficiency');
+    {% for member in member_stats %}
+    csv.push('"{{ member.full_name }}","{{ member.role }}",{{ member.skill_count }},{% if member.avg_proficiency %}{{ "%.1f"|format(member.avg_proficiency) }}{% else %}0{% endif %}');
+    {% endfor %}
+    
+    // Create and download CSV
+    const csvContent = csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const date = new Date().toISOString().split('T')[0];
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `team-skills-report-${date}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
 {% endblock %}

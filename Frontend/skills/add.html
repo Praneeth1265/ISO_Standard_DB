@@ -1,128 +1,152 @@
 {% extends "base.html" %}
 
-{% block title %}Add Skill - Team Skills Manager{% endblock %}
+{% block title %}Add Skills - Team Skills Manager{% endblock %}
 
 {% block content %}
-<div style="max-width: 800px; margin: 0 auto;">
+<div style="max-width: 1000px; margin: 0 auto;">
     <div style="margin-bottom: 2rem;">
         <a href="/skills" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
             <i class="fas fa-arrow-left"></i> Back to Skills
         </a>
         <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
-            Add New Skill
+            Add Skills
         </h1>
         <p style="color: var(--text-secondary); font-size: 1.1rem;">
-            Add a new skill to your organization's catalog
+            Add multiple skills - each skill is saved automatically when you move to the next
         </p>
     </div>
 
+    <!-- Added Skills Summary (Collapsed Cards) -->
+    <div id="addedSkillsList" style="margin-bottom: 2rem;"></div>
+
+    <!-- Info Card -->
+    <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05)); border-color: var(--accent-primary);">
+        <div style="display: flex; gap: 1rem;">
+            <i class="fas fa-info-circle" style="font-size: 1.5rem; color: var(--accent-primary); flex-shrink: 0;"></i>
+            <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">How it works</h4>
+                <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-left: 1.5rem; line-height: 1.8;">
+                    <li>Each skill is automatically saved when you click "Save & Add Next Skill"</li>
+                    <li>Previously added skills will appear as collapsed cards above the form</li>
+                    <li>Use the search bar to quickly find roles</li>
+                    <li>Optionally assign minimum proficiency levels (1-3) for each role</li>
+                    <li>Click "Save & Finish" when you're done adding all skills</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Skill Form -->
     <div class="card">
-        <form method="POST" action="/skills/add">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1.5rem; font-weight: 600;">
+                <i class="fas fa-lightbulb"></i> Skill <span id="skillCount">1</span>
+            </h3>
+            <span id="saveStatus" style="display: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem;">
+                <i class="fas fa-check-circle"></i> Auto-saved
+            </span>
+        </div>
+
+        <form id="skillForm">
+            <!-- Skill Name -->
             <div class="form-group">
                 <label for="skill_name" class="form-label">
-                    <i class="fas fa-lightbulb"></i> Skill Name *
+                    <i class="fas fa-lightbulb" style="color: var(--accent-primary);"></i> Skill Name *
                 </label>
                 <input 
                     type="text" 
                     id="skill_name" 
                     name="skill_name" 
                     class="form-control" 
-                    required 
                     placeholder="e.g., Python Programming, Clinical Data Analysis"
+                    required
                     autocomplete="off"
                 >
             </div>
 
+            <!-- Category -->
             <div class="form-group">
                 <label for="category" class="form-label">
-                    <i class="fas fa-tag"></i> Category *
+                    <i class="fas fa-tag" style="color: var(--accent-secondary);"></i> Category *
                 </label>
                 <select name="category" id="category" class="form-control" required>
                     <option value="">Choose a category...</option>
-                    {% for cat in categories %}
-                    <option value="{{ cat }}">{{ cat }}</option>
-                    {% endfor %}
+                    <option value="Technical">Technical</option>
+                    <option value="Clinical">Clinical</option>
+                    <option value="Soft Skill">Soft Skill</option>
+                    <option value="Regulatory">Regulatory</option>
                 </select>
-            </div>
-
-            <!-- Category Descriptions -->
-            <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem;">
-                <h4 style="font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-info-circle" style="color: var(--accent-primary);"></i>
-                    Category Guidelines
-                </h4>
-                <div style="display: grid; gap: 1rem;">
-                    <div>
-                        <strong style="color: var(--accent-primary);">Technical:</strong>
-                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Programming languages, software tools, databases, frameworks</span>
-                    </div>
-                    <div>
-                        <strong style="color: var(--accent-success);">Clinical:</strong>
-                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Medical knowledge, patient care, clinical analysis, healthcare protocols</span>
-                    </div>
-                    <div>
-                        <strong style="color: var(--accent-warning);">Regulatory:</strong>
-                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Compliance standards (ISO, FDA, IEC), quality assurance, validation</span>
-                    </div>
-                    <div>
-                        <strong style="color: var(--accent-secondary);">Soft Skill:</strong>
-                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Communication, leadership, project management, teamwork</span>
+                <div style="margin-top: 0.75rem; padding: 1rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px;">
+                    <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
+                        <div><strong style="color: var(--accent-primary);">Technical:</strong> <span style="color: var(--text-secondary);">Programming languages, software tools, databases, frameworks</span></div>
+                        <div><strong style="color: var(--accent-success);">Clinical:</strong> <span style="color: var(--text-secondary);">Medical knowledge, patient care, clinical analysis</span></div>
+                        <div><strong style="color: var(--accent-secondary);">Soft Skill:</strong> <span style="color: var(--text-secondary);">Communication, leadership, project management</span></div>
+                        <div><strong style="color: var(--accent-warning);">Regulatory:</strong> <span style="color: var(--text-secondary);">Compliance standards (ISO, FDA), quality assurance</span></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Role Requirements Section -->
-            <div class="form-group" style="margin-top: 1.5rem;">
+            <!-- Role Assignments (Optional) -->
+            <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label class="form-label">
-                    <i class="fas fa-user-tag" style="color: var(--accent-secondary); margin-right: 0.5rem;"></i>
-                    Assign to Roles (Optional)
+                    <i class="fas fa-user-tag" style="color: var(--accent-success);"></i> Assign to Roles (Optional)
                 </label>
                 
-                <!-- Column Headers (initially hidden) -->
-                <div id="role-headers" style="display: none; margin-bottom: 0.5rem;">
-                    <div style="display: flex; gap: 1rem; align-items: center;">
-                        <div style="flex: 2;">
-                            <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);">Role</span>
-                        </div>
-                        <div style="flex: 1;">
-                            <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);">Min Skill Proficiency Req</span>
-                        </div>
-                        <div style="width: 42px;"></div>
-                    </div>
+                <!-- Roles Search Bar -->
+                <div style="position: relative; margin-bottom: 1rem;">
+                    <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                    <input 
+                        type="text" 
+                        id="rolesSearch" 
+                        placeholder="Search roles..." 
+                        class="form-control"
+                        style="padding-left: 2.5rem;"
+                        autocomplete="off"
+                    >
                 </div>
 
-                <div id="roles-container" style="margin-bottom: 1rem;">
-                    <!-- Roles will be added here dynamically -->
+                <!-- Roles Grid with Min Proficiency Controls (2 columns) -->
+                <div id="rolesContainer" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; max-height: 350px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary);">
+                    {% for role in all_roles %}
+                    <label class="role-option" 
+                           data-role-name="{{ role.role_name|lower }}"
+                           style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+                            <input 
+                                type="checkbox" 
+                                name="roles" 
+                                value="{{ role.role_id }}"
+                                style="width: 18px; height: 18px; cursor: pointer;"
+                            >
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.95rem;">{{ role.role_name }}</div>
+                                {% if role.description %}
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">{{ role.description[:60] }}{% if role.description|length > 60 %}...{% endif %}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="proficiency-controls" style="display: none; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.85rem; color: var(--text-secondary); margin-right: 0.25rem;">Min:</span>
+                            <button type="button" class="prof-down" data-role-id="{{ role.role_id }}" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; transition: all 0.2s;">−</button>
+                            <span class="prof-label" data-role-id="{{ role.role_id }}" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-primary); min-width: 80px; text-align: center;">Intermediate</span>
+                            <button type="button" class="prof-up" data-role-id="{{ role.role_id }}" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; transition: all 0.2s;">+</button>
+                            <input type="hidden" name="min_prof_{{ role.role_id }}" class="prof-input" value="2">
+                        </div>
+                    </label>
+                    {% endfor %}
                 </div>
-                <button type="button" id="add-role-btn" class="btn btn-secondary">
-                    <i class="fas fa-plus"></i> Add to Role
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.75rem;">
+                    <i class="fas fa-info-circle"></i> Optionally assign this skill to roles with minimum proficiency requirements
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons" style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="button" id="addNextBtn" class="btn" style="flex: 1; background: var(--accent-primary); color: #0a0e14; font-weight: 600; box-shadow: 0 2px 8px rgba(0, 217, 255, 0.25);">
+                    <i class="fas fa-plus-circle"></i> Save & Add Next Skill
                 </button>
-                <small style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
-                    Optionally assign this skill as a requirement to one or more roles with minimum proficiency levels
-                </small>
-            </div>
-
-            <!-- Info Box -->
-            <div style="background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05)); padding: 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-primary);">
-                <div style="display: flex; gap: 1rem;">
-                    <i class="fas fa-info-circle" style="color: var(--accent-primary); font-size: 1.25rem; margin-top: 0.2rem;"></i>
-                    <div>
-                        <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
-                            Role Requirements
-                        </h4>
-                        <ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-left: 1.25rem;">
-                            <li>Assign this skill to roles that require it</li>
-                            <li>Set the <strong>minimum proficiency level</strong> required for each role</li>
-                            <li>Proficiency levels: 1 (Beginner), 2 (Intermediate), 3 (Expert)</li>
-                            <li>Members must meet or exceed this level to be eligible for the role</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">
-                    <i class="fas fa-plus-circle"></i> Add Skill
+                <button type="button" id="finishBtn" class="btn btn-success">
+                    <i class="fas fa-check"></i> Save & Finish
                 </button>
                 <a href="/skills" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Cancel
@@ -132,158 +156,253 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    #addNextBtn::before {
+        display: none !important;
+    }
+    #addNextBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 217, 255, 0.35);
+        filter: brightness(1.1);
+    }
+    #addNextBtn:active {
+        transform: translateY(0);
+    }
+</style>
+
 <script>
-// Roles data from backend
-const availableRoles = {{ roles_json | safe }};
-let roleCounter = 0;
-const selectedRoles = new Set(); // Track selected roles to prevent duplicates
+    let skillCounter = 1;
+    let addedSkills = [];
+    
+    const profLabels = ['', 'Beginner', 'Intermediate', 'Advanced'];
 
-// Function to get available roles (excluding already selected ones)
-function getAvailableRolesOptions() {
-    return availableRoles
-        .filter(role => !selectedRoles.has(role.role_id.toString()))
-        .map(role => `<option value="${role.role_id}">${role.role_name}</option>`)
-        .join('');
-}
+    // Roles search functionality
+    const rolesSearch = document.getElementById('rolesSearch');
+    const roleOptions = document.querySelectorAll('.role-option');
 
-// Function to update all role dropdowns
-function updateAllRoleDropdowns() {
-    document.querySelectorAll('.role-select').forEach(select => {
-        const currentValue = select.value;
-        const availableOptions = availableRoles
-            .filter(role => role.role_id.toString() === currentValue || !selectedRoles.has(role.role_id.toString()))
-            .map(role => `<option value="${role.role_id}" ${role.role_id.toString() === currentValue ? 'selected' : ''}>${role.role_name}</option>`)
-            .join('');
-        
-        select.innerHTML = '<option value="">Select a role...</option>' + availableOptions;
+    rolesSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        roleOptions.forEach(option => {
+            const roleName = option.dataset.roleName;
+            if (roleName.includes(searchTerm)) {
+                option.style.display = 'flex';
+            } else {
+                option.style.display = 'none';
+            }
+        });
     });
-}
 
-// Function to show/hide headers based on whether there are role rows
-function updateHeadersVisibility() {
-    const container = document.getElementById('roles-container');
-    const headers = document.getElementById('role-headers');
-    const hasRows = container.children.length > 0;
-    headers.style.display = hasRows ? 'block' : 'none';
-}
-
-// Add role requirement row
-document.getElementById('add-role-btn').addEventListener('click', function() {
-    const container = document.getElementById('roles-container');
-    const roleRow = document.createElement('div');
-    roleRow.className = 'role-requirement-row';
-    roleRow.style.cssText = 'display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;';
-    roleRow.id = `role-row-${roleCounter}`;
-    
-    roleRow.innerHTML = `
-        <div style="flex: 2;">
-            <select name="role_ids[]" class="form-control role-select" data-row-id="${roleCounter}" onchange="handleRoleChange(this)">
-                <option value="">Select a role...</option>
-                ${getAvailableRolesOptions()}
-            </select>
-        </div>
-        <div style="flex: 1;">
-            <select name="min_proficiencies[]" class="form-control proficiency-select">
-                <option value="">Min Level...</option>
-                <option value="1">1 - Beginner</option>
-                <option value="2">2 - Intermediate</option>
-                <option value="3">3 - Expert</option>
-            </select>
-        </div>
-        <button type="button" class="btn btn-danger" onclick="removeRoleRow(${roleCounter})" style="height: 42px; width: 42px;">
-            <i class="fas fa-trash"></i>
-        </button>
-    `;
-    
-    container.appendChild(roleRow);
-    roleCounter++;
-    updateHeadersVisibility();
-});
-
-// Handle role selection change
-function handleRoleChange(selectElement) {
-    const previousValue = selectElement.dataset.previousValue;
-    const newValue = selectElement.value;
-    
-    // Remove previous selection from the set
-    if (previousValue) {
-        selectedRoles.delete(previousValue);
-    }
-    
-    // Add new selection to the set
-    if (newValue) {
-        selectedRoles.add(newValue);
-        selectElement.dataset.previousValue = newValue;
-    } else {
-        delete selectElement.dataset.previousValue;
-    }
-    
-    // Update all dropdowns to reflect available roles
-    updateAllRoleDropdowns();
-}
-
-// Remove role requirement row
-function removeRoleRow(id) {
-    const row = document.getElementById(`role-row-${id}`);
-    if (row) {
-        const select = row.querySelector('.role-select');
-        const selectedValue = select.dataset.previousValue;
-        
-        // Remove from selected roles set
-        if (selectedValue) {
-            selectedRoles.delete(selectedValue);
-        }
-        
-        row.remove();
-        
-        // Update all remaining dropdowns
-        updateAllRoleDropdowns();
-        updateHeadersVisibility();
-    }
-}
-
-// Form validation
-document.querySelector('form').addEventListener('submit', function(e) {
-    const roleSelects = document.querySelectorAll('select[name="role_ids[]"]');
-    const proficiencySelects = document.querySelectorAll('select[name="min_proficiencies[]"]');
-    
-    // Check if any role row has a role selected but no proficiency
-    for (let i = 0; i < roleSelects.length; i++) {
-        if (roleSelects[i].value && !proficiencySelects[i].value) {
+    // Proficiency controls
+    document.querySelectorAll('.prof-up').forEach(btn => {
+        btn.addEventListener('click', function(e) {
             e.preventDefault();
-            alert('Please select a minimum proficiency level for all selected roles.');
-            proficiencySelects[i].focus();
+            e.stopPropagation();
+            const roleId = this.dataset.roleId;
+            const labelSpan = document.querySelector(`.prof-label[data-role-id="${roleId}"]`);
+            const input = document.querySelector(`input[name="min_prof_${roleId}"]`);
+            let level = parseInt(input.value);
+            if (level < 3) {
+                level++;
+                labelSpan.textContent = profLabels[level];
+                input.value = level;
+            }
+        });
+    });
+
+    document.querySelectorAll('.prof-down').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const roleId = this.dataset.roleId;
+            const labelSpan = document.querySelector(`.prof-label[data-role-id="${roleId}"]`);
+            const input = document.querySelector(`input[name="min_prof_${roleId}"]`);
+            let level = parseInt(input.value);
+            if (level > 1) {
+                level--;
+                labelSpan.textContent = profLabels[level];
+                input.value = level;
+            }
+        });
+    });
+
+    // Handle role checkbox changes
+    document.querySelectorAll('input[name="roles"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function(e) {
+            e.stopPropagation();
+            const roleId = this.value;
+            const option = this.closest('.role-option');
+            const profControls = option.querySelector('.proficiency-controls');
+            
+            if (this.checked) {
+                profControls.style.display = 'flex';
+                option.style.borderColor = '#10b981';
+                const labelSpan = option.querySelector('.prof-label');
+                labelSpan.textContent = 'Intermediate';
+                option.querySelector('.prof-input').value = '2';
+            } else {
+                profControls.style.display = 'none';
+                option.style.borderColor = 'var(--border-color)';
+            }
+        });
+    });
+
+    // Hover effect for role options
+    document.querySelectorAll('.role-option').forEach(label => {
+        label.addEventListener('mouseenter', function() {
+            if (this.querySelector('input[name="roles"]').checked) {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.3)';
+            } else {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 12px rgba(0, 217, 255, 0.15)';
+            }
+        });
+        label.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+
+    // Save current skill and prepare for next
+    async function saveCurrentSkill(isFinishing = false) {
+        const form = document.getElementById('skillForm');
+        
+        if (!form.checkValidity()) {
+            form.reportValidity();
             return false;
         }
+
+        const skillName = document.getElementById('skill_name').value.trim();
+        const category = document.getElementById('category').value;
         
-        if (!roleSelects[i].value && proficiencySelects[i].value) {
-            e.preventDefault();
-            alert('Please select a role for all proficiency levels specified.');
-            roleSelects[i].focus();
+        const selectedRoles = Array.from(document.querySelectorAll('input[name="roles"]:checked'))
+            .map(cb => {
+                const roleId = parseInt(cb.value);
+                const minProf = parseInt(document.querySelector(`input[name="min_prof_${roleId}"]`).value);
+                return { role_id: roleId, min_proficiency: minProf };
+            });
+
+        const skillData = {
+            skill_name: skillName,
+            category: category,
+            role_assignments: selectedRoles
+        };
+
+        const addNextBtn = document.getElementById('addNextBtn');
+        const finishBtn = document.getElementById('finishBtn');
+        const originalAddText = addNextBtn.innerHTML;
+        
+        addNextBtn.disabled = true;
+        finishBtn.disabled = true;
+        addNextBtn.innerHTML = '<span class="loading"></span> Saving...';
+
+        try {
+            const response = await fetch('/skills/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(skillData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // Show success status
+                const saveStatus = document.getElementById('saveStatus');
+                saveStatus.style.display = 'inline-flex';
+                saveStatus.style.background = 'rgba(16, 185, 129, 0.1)';
+                saveStatus.style.color = 'var(--accent-success)';
+                setTimeout(() => saveStatus.style.display = 'none', 2000);
+
+                // Add to added skills list
+                addedSkills.push({
+                    skill_id: result.skill_id,
+                    skill_name: skillName,
+                    category: category,
+                    role_count: selectedRoles.length
+                });
+                
+                addCollapsedSkillCard({
+                    skill_name: skillName,
+                    category: category,
+                    role_count: selectedRoles.length
+                });
+
+                if (isFinishing) {
+                    window.location.href = '/skills';
+                    return true;
+                }
+
+                // Reset form for next skill
+                skillCounter++;
+                document.getElementById('skillCount').textContent = skillCounter;
+                resetForm();
+                return true;
+            } else {
+                alert(result.message || 'Error saving skill. Please try again.');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Network error. Please try again.');
             return false;
+        } finally {
+            addNextBtn.disabled = false;
+            finishBtn.disabled = false;
+            addNextBtn.innerHTML = originalAddText;
         }
     }
+
+    function addCollapsedSkillCard(skill) {
+        const container = document.getElementById('addedSkillsList');
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.padding = '1rem 1.5rem';
+        card.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02))';
+        card.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+        card.style.marginBottom = '1rem';
+        
+        const categoryColor = {
+            'Technical': 'var(--accent-primary)',
+            'Clinical': 'var(--accent-success)',
+            'Regulatory': 'var(--accent-warning)',
+            'Soft Skill': 'var(--accent-secondary)'
+        };
+        
+        card.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <i class="fas fa-check-circle" style="color: var(--accent-success); font-size: 1.5rem;"></i>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem;">${skill.skill_name}</div>
+                    <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; background: rgba(0, 217, 255, 0.15); color: ${categoryColor[skill.category] || 'var(--accent-primary)'};">${skill.category}</span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Assigned Roles</div>
+                    <div style="font-weight: 700; font-size: 1.1rem; color: var(--accent-primary);">${skill.role_count}</div>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    }
+
+    function resetForm() {
+        document.getElementById('skillForm').reset();
+        document.querySelectorAll('input[name="roles"]').forEach(cb => {
+            cb.checked = false;
+            const option = cb.closest('.role-option');
+            option.style.borderColor = 'var(--border-color)';
+            option.querySelector('.proficiency-controls').style.display = 'none';
+        });
+        document.getElementById('rolesSearch').value = '';
+        roleOptions.forEach(option => option.style.display = 'flex');
+        document.getElementById('skill_name').focus();
+    }
+
+    document.getElementById('addNextBtn').addEventListener('click', () => saveCurrentSkill(false));
+    document.getElementById('finishBtn').addEventListener('click', () => saveCurrentSkill(true));
     
-    // Original submit button disable
-    const submitBtn = this.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="loading"></span> Adding Skill...';
-});
-
-// Auto-focus first input
-document.getElementById('skill_name').focus();
-
-// Category selection visual feedback
-const categorySelect = document.getElementById('category');
-categorySelect.addEventListener('change', function() {
-    const colors = {
-        'Technical': 'var(--accent-primary)',
-        'Clinical': 'var(--accent-success)',
-        'Regulatory': 'var(--accent-warning)',
-        'Soft Skill': 'var(--accent-secondary)'
-    };
-    this.style.borderColor = colors[this.value] || 'var(--border-color)';
-});
+    document.getElementById('skill_name').focus();
 </script>
-
 {% endblock %}

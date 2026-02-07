@@ -92,7 +92,7 @@
                             <i class="fas fa-clock"></i>
                             {{ skill.updated_at.strftime('%b %d, %Y') }}
                         </span>
-                        <span>Advanced</span>
+                        <span>Expert</span>
                     </div>
                 </div>
                 {% endfor %}
@@ -119,35 +119,11 @@
                 
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                     {% for role in eligible_roles %}
-                    <div style="padding: 0.75rem 1rem; background: var(--bg-primary); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s;"
+                    <div style="padding: 0.75rem 1rem; background: var(--bg-primary); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between;"
                          onmouseover="this.style.transform='translateX(4px)'; this.style.borderColor='rgba(16, 185, 129, 0.6)';"
                          onmouseout="this.style.transform='translateX(0)'; this.style.borderColor='rgba(16, 185, 129, 0.3)';">
-                        <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ role.role_name }}</div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <div style="flex: 1; height: 4px; background: var(--bg-secondary); border-radius: 2px; overflow: hidden;">
-                                {# Safely calculate percentage - handle any field name variations #}
-                                {% if role.skills_met is defined %}
-                                    {% set met = role.skills_met %}
-                                {% else %}
-                                    {% set met = 0 %}
-                                {% endif %}
-                                
-                                {% if role.total_requirements is defined %}
-                                    {% set total = role.total_requirements %}
-                                {% elif role.skills_required is defined %}
-                                    {% set total = role.skills_required %}
-                                {% elif role.required_skills is defined %}
-                                    {% set total = role.required_skills %}
-                                {% else %}
-                                    {% set total = 1 %}
-                                {% endif %}
-                                
-                                <div style="width: {{ (met / total * 100) if total > 0 else 100 }}%; height: 100%; background: linear-gradient(90deg, #10b981, #059669);"></div>
-                            </div>
-                            <span style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; font-family: 'JetBrains Mono', monospace;">
-                                {{ met }}/{{ total }}
-                            </span>
-                        </div>
+                        <div style="font-weight: 600;">{{ role.role_name }}</div>
+                        <i class="fas fa-check-circle" style="color: var(--accent-success); font-size: 1.1rem;"></i>
                     </div>
                     {% endfor %}
                 </div>

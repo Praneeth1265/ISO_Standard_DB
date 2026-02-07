@@ -124,37 +124,74 @@ def add_role():
     cursor = connection.cursor(dictionary=True)
     
     if request.method == 'POST':
-        role_name = request.form['role_name'].strip()
-        description = request.form['description'].strip()
-        
-        # Get skill requirements from form
-        skill_ids = request.form.getlist('skill_ids[]')
-        min_proficiencies = request.form.getlist('min_proficiencies[]')
-        
-        # This INSERT will trigger after_role_insert
-        cursor.execute("""
-            INSERT INTO roles (role_name, description) 
-            VALUES (%s, %s)
-        """, (role_name, description))
-        
-        # Get the newly created role_id
-        role_id = cursor.lastrowid
-        
-        # Insert skill requirements if any were specified
-        if skill_ids and min_proficiencies:
-            for skill_id, min_prof in zip(skill_ids, min_proficiencies):
-                if skill_id and min_prof:  # Only insert if both values are present
+        # Check if it's a JSON request (from new add page)
+        if request.is_json:
+            data = request.get_json()
+            role_name = data.get('role_name', '').strip()
+            description = data.get('description', '').strip()
+            skill_requirements = data.get('skill_requirements', [])
+            
+            # This INSERT will trigger after_role_insert
+            cursor.execute("""
+                INSERT INTO roles (role_name, description) 
+                VALUES (%s, %s)
+            """, (role_name, description))
+            
+            # Get the newly created role_id
+            role_id = cursor.lastrowid
+            
+            # Insert skill requirements if any were specified
+            for req in skill_requirements:
+                skill_id = req.get('skill_id')
+                min_prof = req.get('min_proficiency')
+                if skill_id and min_prof:
                     cursor.execute("""
                         INSERT INTO role_requirements (role_id, skill_id, min_proficiency_required) 
                         VALUES (%s, %s, %s)
                     """, (role_id, skill_id, min_prof))
-        
-        connection.commit()
-        cursor.close()
-        connection.close()
-        
-        flash(f'Role "{role_name}" added successfully!', 'success')
-        return redirect(url_for('view_role', role_id=role_id))
+            
+            connection.commit()
+            cursor.close()
+            connection.close()
+            
+            return jsonify({
+                'success': True,
+                'message': f'Role "{role_name}" added successfully!',
+                'role_id': role_id
+            })
+        else:
+            # Form submission (old way)
+            role_name = request.form['role_name'].strip()
+            description = request.form['description'].strip()
+            
+            # Get skill requirements from form
+            skill_ids = request.form.getlist('skill_ids[]')
+            min_proficiencies = request.form.getlist('min_proficiencies[]')
+            
+            # This INSERT will trigger after_role_insert
+            cursor.execute("""
+                INSERT INTO roles (role_name, description) 
+                VALUES (%s, %s)
+            """, (role_name, description))
+            
+            # Get the newly created role_id
+            role_id = cursor.lastrowid
+            
+            # Insert skill requirements if any were specified
+            if skill_ids and min_proficiencies:
+                for skill_id, min_prof in zip(skill_ids, min_proficiencies):
+                    if skill_id and min_prof:  # Only insert if both values are present
+                        cursor.execute("""
+                            INSERT INTO role_requirements (role_id, skill_id, min_proficiency_required) 
+                            VALUES (%s, %s, %s)
+                        """, (role_id, skill_id, min_prof))
+            
+            connection.commit()
+            cursor.close()
+            connection.close()
+            
+            flash(f'Role "{role_name}" added successfully!', 'success')
+            return redirect(url_for('view_role', role_id=role_id))
     
     # GET request - get all skills for the dropdown
     cursor.execute("""
@@ -171,7 +208,7 @@ def add_role():
     import json
     skills_json = json.dumps(skills)
     
-    return render_template('roles/add.html', skills_json=skills_json)
+    return render_template('roles/add.html', skills_json=skills_json, all_skills=skills)
 
 @app.route('/roles/<int:role_id>')
 @handle_db_error
@@ -978,41 +1015,78 @@ def add_skill():
     cursor = connection.cursor(dictionary=True)
     
     if request.method == 'POST':
-        skill_name = request.form['skill_name'].strip()
-        category = request.form['category']
-        
-        # Get role assignments from form (optional)
-        role_ids = request.form.getlist('role_ids[]')
-        min_proficiencies = request.form.getlist('min_proficiencies[]')
-        
-        # This INSERT will trigger after_skill_insert
-        cursor.execute("""
-            INSERT INTO skills (skill_name, category) 
-            VALUES (%s, %s)
-        """, (skill_name, category))
-        
-        # Get the newly created skill_id
-        skill_id = cursor.lastrowid
-        
-        # Insert role requirements if any were specified
-        if role_ids and min_proficiencies:
-            for role_id, min_prof in zip(role_ids, min_proficiencies):
-                if role_id and min_prof:  # Only insert if both values are present
+        # Check if it's a JSON request (from new add page)
+        if request.is_json:
+            data = request.get_json()
+            skill_name = data.get('skill_name', '').strip()
+            category = data.get('category', '')
+            role_assignments = data.get('role_assignments', [])
+            
+            # This INSERT will trigger after_skill_insert
+            cursor.execute("""
+                INSERT INTO skills (skill_name, category) 
+                VALUES (%s, %s)
+            """, (skill_name, category))
+            
+            # Get the newly created skill_id
+            skill_id = cursor.lastrowid
+            
+            # Insert role requirements if any were specified
+            for assignment in role_assignments:
+                role_id = assignment.get('role_id')
+                min_prof = assignment.get('min_proficiency')
+                if role_id and min_prof:
                     cursor.execute("""
                         INSERT INTO role_requirements (role_id, skill_id, min_proficiency_required) 
                         VALUES (%s, %s, %s)
                     """, (role_id, skill_id, min_prof))
-        
-        connection.commit()
-        cursor.close()
-        connection.close()
-        
-        flash(f'Skill "{skill_name}" added successfully!', 'success')
-        return redirect(url_for('view_skill', skill_id=skill_id))
+            
+            connection.commit()
+            cursor.close()
+            connection.close()
+            
+            return jsonify({
+                'success': True,
+                'message': f'Skill "{skill_name}" added successfully!',
+                'skill_id': skill_id
+            })
+        else:
+            # Form submission (old way)
+            skill_name = request.form['skill_name'].strip()
+            category = request.form['category']
+            
+            # Get role assignments from form (optional)
+            role_ids = request.form.getlist('role_ids[]')
+            min_proficiencies = request.form.getlist('min_proficiencies[]')
+            
+            # This INSERT will trigger after_skill_insert
+            cursor.execute("""
+                INSERT INTO skills (skill_name, category) 
+                VALUES (%s, %s)
+            """, (skill_name, category))
+            
+            # Get the newly created skill_id
+            skill_id = cursor.lastrowid
+            
+            # Insert role requirements if any were specified
+            if role_ids and min_proficiencies:
+                for role_id, min_prof in zip(role_ids, min_proficiencies):
+                    if role_id and min_prof:  # Only insert if both values are present
+                        cursor.execute("""
+                            INSERT INTO role_requirements (role_id, skill_id, min_proficiency_required) 
+                            VALUES (%s, %s, %s)
+                        """, (role_id, skill_id, min_prof))
+            
+            connection.commit()
+            cursor.close()
+            connection.close()
+            
+            flash(f'Skill "{skill_name}" added successfully!', 'success')
+            return redirect(url_for('view_skill', skill_id=skill_id))
     
     # GET request - get all roles for the dropdown
     cursor.execute("""
-        SELECT role_id, role_name 
+        SELECT role_id, role_name, description 
         FROM roles 
         ORDER BY role_name
     """)
@@ -1026,7 +1100,7 @@ def add_skill():
     roles_json = json.dumps(roles)
     
     categories = ['Technical', 'Clinical', 'Soft Skill', 'Regulatory']
-    return render_template('skills/add.html', categories=categories, roles_json=roles_json)
+    return render_template('skills/add.html', categories=categories, roles_json=roles_json, all_roles=roles)
 
 @app.route('/skills/<int:skill_id>')
 @handle_db_error
@@ -1310,22 +1384,44 @@ def find_experts():
 
     experts = []
     selected_skill = None
-    min_proficiency = 3
-    searched = False
+    min_proficiency = 1
 
-    if request.method == 'POST':
-        searched = True
-        selected_skill = request.form['skill_name']
-        min_proficiency = int(request.form['min_proficiency'])
+    # Handle both GET (for AJAX) and POST requests
+    if request.method == 'POST' or request.method == 'GET':
+        if request.method == 'POST':
+            selected_skill = request.form.get('skill_name', '').strip()
+            min_proficiency = int(request.form.get('min_proficiency', 1))
+        else:  # GET request
+            selected_skill = request.args.get('skill', '').strip()
+            min_proficiency = int(request.args.get('min_proficiency', 1))
+        
+        # If no skill selected, get all members with their highest proficiency skill
+        if not selected_skill or selected_skill == '':
+            # Get all members with their best skill
+            cursor.execute("""
+                SELECT 
+                    CONCAT_WS(' ', tm.first_name, NULLIF(tm.middle_name, ''), tm.last_name) AS 'Team Member',
+                    r.role_name AS 'Job Role',
+                    tm.email AS 'Contact Email',
+                    s.skill_name AS 'Skill',
+                    ms.proficiency_level AS 'Proficiency'
+                FROM team_members tm
+                LEFT JOIN roles r ON tm.role_id = r.role_id
+                INNER JOIN mem_skills ms ON tm.mem_id = ms.mem_id
+                INNER JOIN skills s ON ms.skill_id = s.skill_id
+                WHERE ms.proficiency_level >= %s
+                ORDER BY ms.proficiency_level DESC, tm.first_name, tm.last_name
+            """, (min_proficiency,))
+            experts = cursor.fetchall()
+        else:
+            # Call stored procedure for specific skill
+            cursor.callproc(
+                'Find_Experts_For_Project',
+                (selected_skill, min_proficiency)
+            )
 
-        # Call stored procedure
-        cursor.callproc(
-            'Find_Experts_For_Project',
-            (selected_skill, min_proficiency)
-        )
-
-        for result in cursor.stored_results():
-            experts = result.fetchall()
+            for result in cursor.stored_results():
+                experts = result.fetchall()
 
     cursor.close()
     connection.close()
@@ -1335,8 +1431,7 @@ def find_experts():
         all_skills=all_skills,
         experts=experts,
         selected_skill=selected_skill,
-        min_proficiency=min_proficiency,
-        searched=searched
+        min_proficiency=min_proficiency
     )
 
 # ==================== MEMBER PROFILE (Stored Procedure) ====================
@@ -1501,13 +1596,13 @@ def reports():
     cursor.execute("""
         SELECT 
             CONCAT_WS(' ', tm.first_name, NULLIF(tm.middle_name, ''), tm.last_name) AS full_name,
-            r.role_name,
+            r.role_name AS role,
             COUNT(ms.skill_id) as skill_count,
             AVG(ms.proficiency_level) as avg_proficiency
         FROM team_members tm
         LEFT JOIN roles r ON tm.role_id = r.role_id
         LEFT JOIN mem_skills ms ON tm.mem_id = ms.mem_id
-        GROUP BY tm.mem_id
+        GROUP BY tm.mem_id, r.role_name
         ORDER BY skill_count DESC
     """)
     member_stats = cursor.fetchall()

@@ -17,8 +17,18 @@
     </a>
 </div>
 
+<!-- Search Bar -->
 {% if roles %}
-
+<div style="position: relative; margin-bottom: 2rem;">
+    <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+    <input 
+        type="text" 
+        id="roleSearch" 
+        placeholder="Search roles by name or description..." 
+        class="form-control"
+        style="padding-left: 2.5rem;"
+    >
+</div>
 
 <!-- Roles Table -->
 <div class="card" style="padding: 0; overflow: hidden;">
@@ -33,9 +43,11 @@
                     <th style="font-size: 1.1rem;">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="rolesTableBody">
                 {% for role in roles %}
-                <tr>
+                <tr class="role-row" 
+                    data-name="{{ role.role_name|lower }}" 
+                    data-description="{{ (role.description or '')|lower }}">
                     <td>
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <div style="width: 8px; height: 8px; border-radius: 50%; background: {% if role.required_skills > 0 %}var(--accent-primary){% else %}var(--text-muted){% endif %};"></div>
@@ -90,6 +102,13 @@
     </div>
 </div>
 
+<!-- No Results Message -->
+<div id="noResults" style="display: none;" class="card" style="text-align: center; padding: 3rem 2rem;">
+    <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.3;"></i>
+    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-secondary);">No roles found</h3>
+    <p style="color: var(--text-muted);">Try adjusting your search terms</p>
+</div>
+
 <!-- Quick Info Card -->
 <div class="card" style="margin-top: 2rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.03), rgba(124, 58, 237, 0.03));">
     <div style="display: flex; align-items: start; gap: 1rem;">
@@ -116,4 +135,42 @@
     </a>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    const searchInput = document.getElementById('roleSearch');
+    const roleRows = document.querySelectorAll('.role-row');
+    const noResults = document.getElementById('noResults');
+    const rolesTable = document.querySelector('.card');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            roleRows.forEach(row => {
+                const name = row.dataset.name;
+                const description = row.dataset.description;
+
+                if (name.includes(searchTerm) || description.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+                rolesTable.style.display = 'none';
+            } else {
+                noResults.style.display = 'none';
+                rolesTable.style.display = 'block';
+            }
+        });
+    }
+</script>
 {% endblock %}

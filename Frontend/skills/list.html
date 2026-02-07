@@ -17,7 +17,19 @@
     </a>
 </div>
 
+<!-- Search Bar -->
 {% if skills %}
+<div style="position: relative; margin-bottom: 2rem;">
+    <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+    <input 
+        type="text" 
+        id="skillSearch" 
+        placeholder="Search skills by name or category..." 
+        class="form-control"
+        style="padding-left: 2.5rem;"
+    >
+</div>
+
 <!-- Category Breakdown -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
     {% set categories = skills | groupby('category') %}
@@ -46,9 +58,11 @@
                     <th style = "font-size: 1.1rem;">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="skillsTableBody">
                 {% for skill in skills %}
-                <tr>
+                <tr class="skill-row" 
+                    data-name="{{ skill.skill_name|lower }}" 
+                    data-category="{{ skill.category|lower }}">
                     <td>
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <div style="width: 8px; height: 8px; border-radius: 50%; background: {% if skill.category == 'Technical' %}var(--accent-primary){% elif skill.category == 'Clinical' %}var(--accent-success){% elif skill.category == 'Regulatory' %}var(--accent-warning){% else %}var(--accent-secondary){% endif %};"></div>
@@ -69,7 +83,7 @@
                         {% if skill.avg_proficiency > 0 %}
                         <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                             <div style="width: 80px; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden;">
-                                <div style="height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); width: {{ (skill.avg_proficiency / 5 *100) | int }}%; transition: width 0.3s ease;"></div>
+                                <div style="height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); width: {{ (skill.avg_proficiency / 3 * 100) | int }}%; transition: width 0.3s ease;"></div>
                             </div>
                             <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-secondary);">
                                 {{ "%.1f" | format(skill.avg_proficiency) }}
@@ -100,6 +114,14 @@
         </table>
     </div>
 </div>
+
+<!-- No Results Message -->
+<div id="noResults" style="display: none;" class="card" style="text-align: center; padding: 3rem 2rem;">
+    <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.3;"></i>
+    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-secondary);">No skills found</h3>
+    <p style="color: var(--text-muted);">Try adjusting your search terms</p>
+</div>
+
 {% else %}
 <div class="card" style="text-align: center; padding: 4rem 2rem;">
     <i class="fas fa-lightbulb" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.3;"></i>
@@ -110,4 +132,45 @@
     </a>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    const searchInput = document.getElementById('skillSearch');
+    const skillRows = document.querySelectorAll('.skill-row');
+    const noResults = document.getElementById('noResults');
+    const skillsTable = document.querySelector('.card');
+    const categoryBreakdown = skillsTable ? skillsTable.previousElementSibling : null;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            skillRows.forEach(row => {
+                const name = row.dataset.name;
+                const category = row.dataset.category;
+
+                if (name.includes(searchTerm) || category.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+                if (skillsTable) skillsTable.style.display = 'none';
+                if (categoryBreakdown) categoryBreakdown.style.display = 'none';
+            } else {
+                noResults.style.display = 'none';
+                if (skillsTable) skillsTable.style.display = 'block';
+                if (categoryBreakdown) categoryBreakdown.style.display = 'grid';
+            }
+        });
+    }
+</script>
 {% endblock %}

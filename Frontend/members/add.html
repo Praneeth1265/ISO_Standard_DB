@@ -19,6 +19,23 @@
     <!-- Added Members Summary (Collapsed Cards) -->
     <div id="addedMembersList" style="margin-bottom: 2rem;"></div>
 
+    <!-- Info Card -->
+    <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05)); border-color: var(--accent-primary);">
+        <div style="display: flex; gap: 1rem;">
+            <i class="fas fa-info-circle" style="font-size: 1.5rem; color: var(--accent-primary); flex-shrink: 0;"></i>
+            <div>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">How it works</h4>
+                <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-left: 1.5rem; line-height: 1.8;">
+                    <li>Each member is automatically saved when you click "Save & Add Next Member"</li>
+                    <li>Previously added members will appear as collapsed cards above the form</li>
+                    <li>Use the search bar to quickly find skills - filter by name or category</li>
+                    <li>Select skills and use +/- buttons to set proficiency: Beginner, Intermediate, Advanced</li>
+                    <li>Click "Save & Finish" when you're done adding all members</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <!-- Current Member Form -->
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -134,56 +151,38 @@
                     >
                 </div>
 
-                <!-- 3x3 Grid with Scrollbar (max-height 450px) -->
-                <div id="skillsContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; max-height: 450px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary);">
+                <!-- Skills Grid with Proficiency Controls (2 columns) -->
+                <div id="skillsContainer" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; max-height: 400px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary);">
                     {% for skill in all_skills %}
-                    <label style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; background: var(--bg-primary); border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 2px solid var(--border-color); min-height: 120px;" 
-                           class="skill-option" 
+                    <label class="skill-option" 
                            data-skill-name="{{ skill.skill_name|lower }}" 
                            data-category="{{ skill.category|lower }}"
-                           data-skill-id="{{ skill.skill_id }}">
-                        
-                        <!-- Top row: Checkbox and Skill Info -->
-                        <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                           style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
                             <input 
                                 type="checkbox" 
                                 name="skills" 
                                 value="{{ skill.skill_id }}"
                                 data-skill-name="{{ skill.skill_name }}"
                                 data-category="{{ skill.category }}"
-                                style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; margin-top: 2px;"
+                                style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;"
                             >
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ skill.skill_name }}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">{{ skill.category }}</div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.95rem;">{{ skill.skill_name }}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">{{ skill.category }}</div>
                             </div>
                         </div>
-
-                        <!-- Bottom row: Proficiency Controls -->
-                        <div class="proficiency-controls" style="display: none; flex-direction: column; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
-                                <button type="button" class="prof-down" data-skill-id="{{ skill.skill_id }}" 
-                                        style="width: 32px; height: 32px; border: 1px solid var(--border-color); background: var(--bg-secondary); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
-                                        onmouseover="this.style.background='var(--bg-secondary)'; this.style.color='white'; this.style.borderColor='var(--accent-primary)';"
-                                        onmouseout="this.style.background='var(--bg-secondary)'; this.style.color=''; this.style.borderColor='var(--border-color)';">
-                                    <i class="fas fa-minus" style="font-size: 0.8rem;"></i>
-                                </button>
-                                <span class="prof-label" data-skill-id="{{ skill.skill_id }}" 
-                                      style="font-weight: 600; font-size: 0.85rem; color: var(--accent-primary); text-align: center; flex: 1;">Intermediate</span>
-                                <button type="button" class="prof-up" data-skill-id="{{ skill.skill_id }}" 
-                                        style="width: 32px; height: 32px; border: 1px solid var(--border-color); background: var(--bg-secondary); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
-                                        onmouseover="this.style.background='var(--bg-secondary)'; this.style.color='white'; this.style.borderColor='var(--accent-primary)';"
-                                        onmouseout="this.style.background='var(--bg-secondary)'; this.style.color=''; this.style.borderColor='var(--border-color)';">
-                                    <i class="fas fa-plus" style="font-size: 0.8rem;"></i>
-                                </button>
-                            </div>
+                        <div class="proficiency-controls" style="display: none; align-items: center; gap: 0.5rem;">
+                            <button type="button" class="prof-down" data-skill-id="{{ skill.skill_id }}" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; transition: all 0.2s;">−</button>
+                            <span class="prof-label" data-skill-id="{{ skill.skill_id }}" style="font-size: 0.85rem; font-weight: 600; color: var(--accent-primary); min-width: 80px; text-align: center;">Intermediate</span>
+                            <button type="button" class="prof-up" data-skill-id="{{ skill.skill_id }}" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; transition: all 0.2s;">+</button>
                             <input type="hidden" name="proficiency_{{ skill.skill_id }}" class="prof-input" value="2">
                         </div>
                     </label>
                     {% endfor %}
                 </div>
                 <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.75rem;">
-                    <i class="fas fa-info-circle"></i> Select skills and use +/- buttons to adjust: Beginner (1), Intermediate (2), Advanced (3). Default is Intermediate.
+                    <i class="fas fa-info-circle"></i> Select skills and use +/- buttons to set proficiency: Beginner, Intermediate, Advanced
                 </p>
             </div>
 
@@ -206,8 +205,8 @@
             </div>
 
             <!-- Action Buttons -->
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="button" id="addNextBtn" class="btn btn-primary" style="flex: 1;">
+            <div class="action-buttons" style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="button" id="addNextBtn" class="btn" style="flex: 1; background: var(--accent-primary); color: #0a0e14; font-weight: 600; box-shadow: 0 2px 8px rgba(0, 217, 255, 0.25);">
                     <i class="fas fa-plus-circle"></i> Save & Add Next Member
                 </button>
                 <button type="button" id="finishBtn" class="btn btn-success">
@@ -219,28 +218,25 @@
             </div>
         </form>
     </div>
-
-    <!-- Info Card -->
-    <div class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05)); border-color: var(--accent-primary);">
-        <div style="display: flex; gap: 1rem;">
-            <i class="fas fa-info-circle" style="font-size: 1.5rem; color: var(--accent-primary); flex-shrink: 0;"></i>
-            <div>
-                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">How it works</h4>
-                <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-left: 1.5rem; line-height: 1.8;">
-                    <li>Each member is automatically saved when you click "Save & Add Next Member"</li>
-                    <li>Previously added members will appear as collapsed cards above the form</li>
-                    <li>Use the search bar to quickly find skills - filter by name or category</li>
-                    <li>Select skills and use +/- buttons to set proficiency: Beginner, Intermediate, Advanced</li>
-                    <li>Click "Save & Finish" when you're done adding all members</li>
-                </ul>
-            </div>
-        </div>
-    </div>
 </div>
 
 {% endblock %}
 
 {% block extra_js %}
+<style>
+    #addNextBtn::before {
+        display: none !important;
+    }
+    #addNextBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 217, 255, 0.35);
+        filter: brightness(1.1);
+    }
+    #addNextBtn:active {
+        transform: translateY(0);
+    }
+</style>
+
 <script>
     const allRoles = {{ all_roles_json|safe }};
     const roleRequirements = {{ role_requirements_json|safe }};
@@ -248,6 +244,27 @@
     let addedMembers = [];
     
     const profLabels = ['', 'Beginner', 'Intermediate', 'Advanced'];
+
+    // Update button states based on proficiency level
+    function updateButtonStates(skillId) {
+        const input = document.querySelector(`input[name="proficiency_${skillId}"]`);
+        const level = parseInt(input.value);
+        const upBtn = document.querySelector(`.prof-up[data-skill-id="${skillId}"]`);
+        const downBtn = document.querySelector(`.prof-down[data-skill-id="${skillId}"]`);
+        
+        if (downBtn) downBtn.disabled = (level <= 1);
+        if (upBtn) upBtn.disabled = (level >= 3);
+        
+        // Visual styling for disabled state
+        if (downBtn) {
+            downBtn.style.opacity = (level <= 1) ? '0.3' : '1';
+            downBtn.style.cursor = (level <= 1) ? 'not-allowed' : 'pointer';
+        }
+        if (upBtn) {
+            upBtn.style.opacity = (level >= 3) ? '0.3' : '1';
+            upBtn.style.cursor = (level >= 3) ? 'not-allowed' : 'pointer';
+        }
+    }
 
     // Skills search functionality
     const skillsSearch = document.getElementById('skillsSearch');
@@ -271,6 +288,7 @@
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            if (this.disabled) return;
             const skillId = this.dataset.skillId;
             const labelSpan = document.querySelector(`.prof-label[data-skill-id="${skillId}"]`);
             const input = document.querySelector(`input[name="proficiency_${skillId}"]`);
@@ -279,6 +297,7 @@
                 level++;
                 labelSpan.textContent = profLabels[level];
                 input.value = level;
+                updateButtonStates(skillId);
             }
         });
     });
@@ -287,6 +306,7 @@
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            if (this.disabled) return;
             const skillId = this.dataset.skillId;
             const labelSpan = document.querySelector(`.prof-label[data-skill-id="${skillId}"]`);
             const input = document.querySelector(`input[name="proficiency_${skillId}"]`);
@@ -295,6 +315,7 @@
                 level--;
                 labelSpan.textContent = profLabels[level];
                 input.value = level;
+                updateButtonStates(skillId);
             }
         });
     });
@@ -313,6 +334,7 @@
                 const labelSpan = option.querySelector('.prof-label');
                 labelSpan.textContent = 'Intermediate';
                 option.querySelector('.prof-input').value = '2';
+                updateButtonStates(skillId);
             } else {
                 profControls.style.display = 'none';
                 option.style.borderColor = 'var(--border-color)';

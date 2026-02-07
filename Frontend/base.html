@@ -503,6 +503,73 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Responsive Design - Mobile First */
+        @media (max-width: 768px) {
+            /* Grid layouts - 2 and 3 columns become 1 column on mobile */
+            [style*="grid-template-columns: repeat(2, 1fr)"],
+            [style*="grid-template-columns: repeat(3, 1fr)"],
+            [style*="grid-template-columns: 1fr 1fr"],
+            [style*="grid-template-columns: 1fr 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Skills/Roles grids */
+            #skillsContainer,
+            #rolesContainer {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Button groups - stack vertically on mobile */
+            .action-buttons {
+                flex-direction: column !important;
+            }
+
+            .action-buttons > *,
+            .action-buttons .btn,
+            .action-buttons a.btn,
+            .action-buttons button {
+                width: 100% !important;
+                flex: none !important;
+            }
+
+            /* Card padding adjustment */
+            .card {
+                padding: 1rem !important;
+            }
+
+            /* Container padding */
+            .container {
+                padding: 1rem !important;
+            }
+
+            /* Reduce font sizes slightly */
+            h1 {
+                font-size: 2rem !important;
+            }
+
+            h2 {
+                font-size: 1.5rem !important;
+            }
+
+            h3 {
+                font-size: 1.25rem !important;
+            }
+
+            /* Stack form field rows that are side by side */
+            [style*="display: grid"][style*="gap: 1rem"] {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        /* Consistent button heights */
+        .btn, button.btn, a.btn {
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.65rem 1.25rem;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
