@@ -517,6 +517,7 @@
             <ul class="nav-links">
                 <li><a href="/" {% if request.path == '/' %}class="active"{% endif %}><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
                 <li><a href="/members" {% if '/members' in request.path %}class="active"{% endif %}><i class="fas fa-users"></i> <span>Members</span></a></li>
+                <li><a href="/roles" {% if '/roles' in request.path %}class="active"{% endif %}><i class="fas fa-user-tag"></i> <span>Roles</span></a></li>
                 <li><a href="/skills" {% if '/skills' in request.path %}class="active"{% endif %}><i class="fas fa-lightbulb"></i> <span>Skills</span></a></li>
                 <li><a href="/find-experts" {% if request.path == '/find-experts' %}class="active"{% endif %}><i class="fas fa-search"></i> <span>Find Experts</span></a></li>
                 <li><a href="/reports" {% if request.path == '/reports' %}class="active"{% endif %}><i class="fas fa-chart-bar"></i> <span>Reports</span></a></li>

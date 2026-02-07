@@ -1,4 +1,4 @@
-from app import get_db_connection
+from ISO_Standard_DB.app import get_db_connection
 
 def test_add_member_flow(client):
     """Test adding a member and verifying DB entry + Trigger Audit Log"""

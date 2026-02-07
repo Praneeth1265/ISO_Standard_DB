@@ -2,7 +2,7 @@ import pytest
 import mysql.connector
 import os
 import re
-from app import app, get_db_connection
+from ISO_Standard_DB.app import app, get_db_connection
 
 # Define test database credentials
 TEST_DB_NAME = 'test_team_skills_db'

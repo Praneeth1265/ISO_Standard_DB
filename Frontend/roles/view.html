@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}{{ role.role_name }} - Team Skills Manager{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <a href="/roles" style="color: var(--text-secondary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; transition: color 0.3s ease;">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Roles</span>
+                </a>
+            </div>
+            <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                {{ role.role_name }}
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">
+                {{ role.description or 'No description provided' }}
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="/roles/{{ role.role_id }}/edit" class="btn btn-secondary">
+                <i class="fas fa-edit"></i> Edit Role
+            </a>
+            <form method="POST" action="/roles/{{ role.role_id }}/delete" style="display: inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this role? Members with this role will have their role unassigned.')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="card" style="background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(0, 217, 255, 0.02));">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <p style="color: var(--text-secondary); font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+                    Required Skills
+                </p>
+                <h2 style="font-size: 2rem; font-weight: 700; color: var(--accent-primary); font-family: 'JetBrains Mono', monospace;">
+                    {{ requirements|length }}
+                </h2>
+            </div>
+            <div style="width: 50px; height: 50px; background: rgba(0, 217, 255, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-primary);">
+                <i class="fas fa-list-check" style="font-size: 1.5rem; color: var(--accent-primary);"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <p style="color: var(--text-secondary); font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+                    Team Members
+                </p>
+                <h2 style="font-size: 2rem; font-weight: 700; color: var(--accent-success); font-family: 'JetBrains Mono', monospace;">
+                    {{ members|length }}
+                </h2>
+            </div>
+            <div style="width: 50px; height: 50px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-success);">
+                <i class="fas fa-users" style="font-size: 1.5rem; color: var(--accent-success);"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Skill Requirements Section -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-clipboard-check" style="color: var(--accent-primary);"></i>
+            Skill Requirements
+        </h3>
+        {% if available_skills %}
+        <button onclick="document.getElementById('addRequirementForm').style.display='block'" class="btn btn-primary" style="font-size: 0.9rem;">
+            <i class="fas fa-plus"></i> Add Requirement
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Add Requirement Form (Hidden by default) -->
+    {% if available_skills %}
+    <div id="addRequirementForm" style="display: none; background: var(--bg-tertiary); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+        <form method="POST" action="/roles/{{ role.role_id }}/requirements/add">
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Skill</label>
+                    <select name="skill_id" class="form-control" required>
+                        <option value="">Select a skill...</option>
+                        {% for skill in available_skills %}
+                        <option value="{{ skill.skill_id }}">{{ skill.skill_name }} ({{ skill.category }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Minimum Proficiency Level</label>
+                    <select name="min_proficiency_required" class="form-control" required>
+                        <option value="1">Level 1 - Beginner</option>
+                        <option value="2">Level 2 - Intermediate</option>
+                        <option value="3" selected>Level 3 - Expert</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Add
+                    </button>
+                    <button type="button" onclick="document.getElementById('addRequirementForm').style.display='none'" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if requirements %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="font-size: 1rem;">Skill Name</th>
+                    <th style="font-size: 1rem;">Category</th>
+                    <th style="font-size: 1rem;">Min. Proficiency</th>
+                    <th style="font-size: 1rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requirements %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent-primary);"></div>
+                            <strong>{{ req.skill_name }}</strong>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {% if req.category == 'Technical' %}badge-primary{% elif req.category == 'Clinical' %}badge-success{% elif req.category == 'Regulatory' %}badge-warning{% else %}badge-secondary{% endif %}">
+                            {{ req.category }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 100px; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden;">
+                                <div style="height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); width: {{ (req.min_proficiency_required / 3 * 100) | int }}%; transition: width 0.3s ease;"></div>
+                            </div>
+                            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent-primary);">
+                                Level {{ req.min_proficiency_required }}
+                            </span>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <form method="POST" action="/roles/{{ role.role_id }}/requirements/{{ req.skill_id }}/delete" style="display: inline;">
+                            <button type="submit" class="btn btn-danger" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;" onclick="return confirm('Remove this skill requirement?')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 2rem;">
+        <i class="fas fa-inbox" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.3;"></i>
+        <p style="color: var(--text-secondary); font-size: 1rem;">No skill requirements defined for this role</p>
+        {% if available_skills %}
+        <button onclick="document.getElementById('addRequirementForm').style.display='block'" class="btn btn-primary" style="margin-top: 1rem;">
+            <i class="fas fa-plus"></i> Add First Requirement
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Team Members Section -->
+<div class="card">
+    <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fas fa-users" style="color: var(--accent-success);"></i>
+        Assigned Team Members
+    </h3>
+
+    {% if members %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="font-size: 1rem;">Name</th>
+                    <th style="font-size: 1rem;">Email</th>
+                    <th style="font-size: 1rem;">Phone</th>
+                    <th style="font-size: 1rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 0.85rem;">
+                                {{ member.full_name.split()[0][0] }}{{ member.full_name.split()[-1][0] if member.full_name.split()|length > 1 else '' }}
+                            </div>
+                            <strong>{{ member.full_name }}</strong>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="mailto:{{ member.email }}" style="color: var(--accent-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-envelope" style="font-size: 0.85rem;"></i>
+                            {{ member.email }}
+                        </a>
+                    </td>
+                    <td>
+                        <code style="background: var(--bg-tertiary); padding: 0.25rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+                            {{ member.phone_no }}
+                        </code>
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="/members/{{ member.mem_id }}" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+                            <i class="fas fa-eye"></i> View Profile
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 2rem;">
+        <i class="fas fa-user-slash" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.3;"></i>
+        <p style="color: var(--text-secondary); font-size: 1rem;">No team members assigned to this role yet</p>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Members can be assigned this role from their profile page if they meet the skill requirements</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Info Box -->
+<div class="card" style="margin-top: 2rem; background: linear-gradient(135deg, rgba(124, 58, 237, 0.03), rgba(0, 217, 255, 0.03)); border-color: var(--accent-secondary);">
+    <div style="display: flex; align-items: start; gap: 1rem;">
+        <i class="fas fa-shield-alt" style="color: var(--accent-secondary); font-size: 1.5rem; margin-top: 0.25rem;"></i>
+        <div>
+            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
+                Role Assignment Protection
+            </h3>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                This role is protected by the database trigger <code style="background: var(--bg-tertiary); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">validate_role_eligibility</code>. 
+                Members can only be assigned to this role if they possess all required skills at the minimum proficiency levels. 
+                This ensures team members are qualified for their assigned roles.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

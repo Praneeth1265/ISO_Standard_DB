@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ role.role_name }} - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <!-- Header -->
+    <div style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <a href="/roles/{{ role.role_id }}" style="color: var(--text-secondary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; transition: color 0.3s ease;">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Role Details</span>
+            </a>
+        </div>
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            Edit Role
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+            Update role information and skill requirements for {{ role.role_name }}
+        </p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card">
+        <form method="POST" action="/roles/{{ role.role_id }}/edit">
+            <div class="form-group">
+                <label for="role_name" class="form-label">
+                    <i class="fas fa-user-tag" style="color: var(--accent-primary); margin-right: 0.5rem;"></i>
+                    Role Name *
+                </label>
+                <input 
+                    type="text" 
+                    id="role_name" 
+                    name="role_name" 
+                    class="form-control" 
+                    value="{{ role.role_name }}"
+                    required
+                    maxlength="50"
+                >
+                <small style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                    Enter a descriptive name for this role (max 50 characters)
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">
+                    <i class="fas fa-align-left" style="color: var(--accent-secondary); margin-right: 0.5rem;"></i>
+                    Description *
+                </label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    class="form-control" 
+                    rows="4"
+                    required
+                    style="resize: vertical; min-height: 100px;"
+                >{{ role.description }}</textarea>
+                <small style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                    Describe the role's purpose, key responsibilities, and expectations
+                </small>
+            </div>
+
+            <!-- Existing Skills Requirements Section -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-cogs" style="color: var(--accent-success); margin-right: 0.5rem;"></i>
+                    Current Skill Requirements
+                </label>
+                
+                {% if existing_requirements %}
+                <div id="existing-skills-container" style="margin-bottom: 1rem;">
+                    {% for req in existing_requirements %}
+                    <div class="skill-requirement-row existing-skill-row" id="existing-skill-row-{{ req.skill_id }}" style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--accent-primary);">
+                        <div style="flex: 2;">
+                            <input type="text" class="form-control" value="{{ req.skill_name }} ({{ req.category }})" disabled style="background: var(--bg-secondary); cursor: not-allowed;">
+                            <input type="hidden" name="existing_skill_ids[]" value="{{ req.skill_id }}">
+                        </div>
+                        <div style="flex: 1;">
+                            <select name="existing_min_proficiencies[]" class="form-control">
+                                <option value="1" {% if req.min_proficiency_required == 1 %}selected{% endif %}>1 - Beginner</option>
+                                <option value="2" {% if req.min_proficiency_required == 2 %}selected{% endif %}>2 - Intermediate</option>
+                                <option value="3" {% if req.min_proficiency_required == 3 %}selected{% endif %}>3 - Expert</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-danger" onclick="markForDeletion({{ req.skill_id }})" style="padding: 0.5rem 0.75rem;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div style="background: var(--bg-tertiary); padding: 1.5rem; border-radius: 8px; text-align: center; color: var(--text-secondary); margin-bottom: 1rem;">
+                    <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                    No skill requirements currently defined for this role
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- New Skills Requirements Section -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-plus-circle" style="color: var(--accent-success); margin-right: 0.5rem;"></i>
+                    Add New Skill Requirements
+                </label>
+                <div id="skills-container" style="margin-bottom: 1rem;">
+                    <!-- New skills will be added here dynamically -->
+                </div>
+                <button type="button" id="add-skill-btn" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> Add New Skill Requirement
+                </button>
+                <small style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                    Click "Add New Skill Requirement" to add additional skills to this role
+                </small>
+            </div>
+
+            <!-- Hidden field for skills to delete -->
+            <input type="hidden" id="skills_to_delete" name="skills_to_delete" value="">
+
+            <!-- Warning Box -->
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.02)); padding: 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-warning);">
+                <div style="display: flex; gap: 1rem;">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--accent-warning); font-size: 1.25rem; margin-top: 0.2rem;"></i>
+                    <div>
+                        <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
+                            Update Trigger Active
+                        </h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+                            Changes to this role will be automatically logged in the audit trail via the <code style="background: var(--bg-tertiary); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">after_role_update</code> trigger. 
+                            The system will record the old and new values for tracking purposes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <a href="/roles/{{ role.role_id }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card" style="margin-top: 2rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.03), rgba(124, 58, 237, 0.03));">
+        <div style="display: flex; align-items: start; gap: 1rem;">
+            <i class="fas fa-info-circle" style="color: var(--accent-primary); font-size: 1.5rem; margin-top: 0.25rem;"></i>
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
+                    About Role Editing
+                </h3>
+                <ul style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7; margin-left: 1.25rem;">
+                    <li>You can modify proficiency levels for existing skills or remove them entirely</li>
+                    <li>Add new skill requirements by clicking "Add New Skill Requirement"</li>
+                    <li>Current team members will retain this role, but may become ineligible if requirements change</li>
+                    <li>All changes are tracked in the audit log for compliance</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Skills data from backend
+const availableSkills = {{ available_skills_json | safe }};
+const existingSkillIds = {{ existing_skill_ids_json | safe }};
+let skillCounter = 0;
+const selectedSkills = new Set(existingSkillIds.map(id => id.toString())); // Initialize with existing skills
+const skillsToDelete = new Set(); // Track skills marked for deletion
+
+// Function to get available skills (excluding already selected and existing ones)
+function getAvailableSkillsOptions() {
+    return availableSkills
+        .filter(skill => !selectedSkills.has(skill.skill_id.toString()))
+        .map(skill => `<option value="${skill.skill_id}">${skill.skill_name} (${skill.category})</option>`)
+        .join('');
+}
+
+// Function to update all skill dropdowns
+function updateAllSkillDropdowns() {
+    document.querySelectorAll('.skill-select').forEach(select => {
+        const currentValue = select.value;
+        const availableOptions = availableSkills
+            .filter(skill => skill.skill_id.toString() === currentValue || !selectedSkills.has(skill.skill_id.toString()))
+            .map(skill => `<option value="${skill.skill_id}" ${skill.skill_id.toString() === currentValue ? 'selected' : ''}>${skill.skill_name} (${skill.category})</option>`)
+            .join('');
+        
+        select.innerHTML = '<option value="">Select a skill...</option>' + availableOptions;
+    });
+}
+
+// Add new skill requirement row
+document.getElementById('add-skill-btn').addEventListener('click', function() {
+    const container = document.getElementById('skills-container');
+    const skillRow = document.createElement('div');
+    skillRow.className = 'skill-requirement-row';
+    skillRow.style.cssText = 'display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;';
+    skillRow.id = `skill-row-${skillCounter}`;
+    
+    skillRow.innerHTML = `
+        <div style="flex: 2;">
+            <select name="new_skill_ids[]" class="form-control skill-select" data-row-id="${skillCounter}" onchange="handleSkillChange(this)">
+                <option value="">Select a skill...</option>
+                ${getAvailableSkillsOptions()}
+            </select>
+        </div>
+        <div style="flex: 1;">
+            <select name="new_min_proficiencies[]" class="form-control">
+                <option value="">Min Level</option>
+                <option value="1">1 - Beginner</option>
+                <option value="2">2 - Intermediate</option>
+                <option value="3">3 - Expert</option>
+            </select>
+        </div>
+        <button type="button" class="btn btn-danger" onclick="removeSkillRow(${skillCounter})" style="padding: 0.5rem 0.75rem;">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    
+    container.appendChild(skillRow);
+    skillCounter++;
+});
+
+// Handle skill selection change
+function handleSkillChange(selectElement) {
+    const previousValue = selectElement.dataset.previousValue;
+    const newValue = selectElement.value;
+    
+    // Remove previous selection from the set
+    if (previousValue) {
+        selectedSkills.delete(previousValue);
+    }
+    
+    // Add new selection to the set
+    if (newValue) {
+        selectedSkills.add(newValue);
+        selectElement.dataset.previousValue = newValue;
+    } else {
+        delete selectElement.dataset.previousValue;
+    }
+    
+    // Update all dropdowns to reflect available skills
+    updateAllSkillDropdowns();
+}
+
+// Remove new skill requirement row
+function removeSkillRow(id) {
+    const row = document.getElementById(`skill-row-${id}`);
+    if (row) {
+        const select = row.querySelector('.skill-select');
+        const selectedValue = select.dataset.previousValue;
+        
+        // Remove from selected skills set
+        if (selectedValue) {
+            selectedSkills.delete(selectedValue);
+        }
+        
+        row.remove();
+        
+        // Update all remaining dropdowns
+        updateAllSkillDropdowns();
+    }
+}
+
+// Mark existing skill for deletion
+function markForDeletion(skillId) {
+    const row = document.getElementById(`existing-skill-row-${skillId}`);
+    if (row) {
+        if (confirm('Are you sure you want to remove this skill requirement from the role?')) {
+            // Add to deletion set
+            skillsToDelete.add(skillId.toString());
+            
+            // Remove from selected skills (make it available for new additions)
+            selectedSkills.delete(skillId.toString());
+            
+            // Update hidden field
+            document.getElementById('skills_to_delete').value = Array.from(skillsToDelete).join(',');
+            
+            // Visually hide the row
+            row.style.display = 'none';
+            
+            // Update all dropdowns
+            updateAllSkillDropdowns();
+        }
+    }
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const newSkillSelects = document.querySelectorAll('select[name="new_skill_ids[]"]');
+    const newProficiencySelects = document.querySelectorAll('select[name="new_min_proficiencies[]"]');
+    
+    // Check if any new skill row has a skill selected but no proficiency
+    for (let i = 0; i < newSkillSelects.length; i++) {
+        if (newSkillSelects[i].value && !newProficiencySelects[i].value) {
+            e.preventDefault();
+            alert('Please select a minimum proficiency level for all selected skills.');
+            newProficiencySelects[i].focus();
+            return false;
+        }
+        
+        if (!newSkillSelects[i].value && newProficiencySelects[i].value) {
+            e.preventDefault();
+            alert('Please select a skill for all proficiency levels specified.');
+            newSkillSelects[i].focus();
+            return false;
+        }
+    }
+});
+</script>
+{% endblock %}

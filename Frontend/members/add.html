@@ -1,73 +1,174 @@
 {% extends "base.html" %}
 
-{% block title %}Add Member - Team Skills Manager{% endblock %}
+{% block title %}Add Members - Team Skills Manager{% endblock %}
 
 {% block content %}
-<div style="max-width: 800px; margin: 0 auto;">
+<div style="max-width: 1200px; margin: 0 auto;">
     <div style="margin-bottom: 2rem;">
         <a href="/members" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
             <i class="fas fa-arrow-left"></i> Back to Members
         </a>
         <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
-            Add New Team Member
+            Add Team Members
         </h1>
         <p style="color: var(--text-secondary); font-size: 1.1rem;">
-            Fill in the details to add a new member to your team
+            Add multiple team members - each member is saved automatically when you move to the next
         </p>
     </div>
 
+    <!-- Added Members Summary (Collapsed Cards) -->
+    <div id="addedMembersList" style="margin-bottom: 2rem;"></div>
+
+    <!-- Current Member Form -->
     <div class="card">
-        <form method="POST" action="/members/add">
-            <div class="form-group">
-                <label for="full_name" class="form-label">
-                    <i class="fas fa-user"></i> Full Name *
-                </label>
-                <input 
-                    type="text" 
-                    id="full_name" 
-                    name="full_name" 
-                    class="form-control" 
-                    required 
-                    placeholder="Enter full name"
-                    autocomplete="name"
-                >
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1.5rem; font-weight: 600;">
+                <i class="fas fa-user-plus"></i> Member <span id="memberCount">1</span>
+            </h3>
+            <span id="saveStatus" style="display: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem;">
+                <i class="fas fa-check-circle"></i> Auto-saved
+            </span>
+        </div>
+
+        <form id="memberForm">
+            <!-- Name Fields -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="form-group">
+                    <label for="first_name" class="form-label">
+                        <i class="fas fa-user"></i> First Name *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="first_name" 
+                        name="first_name" 
+                        class="form-control" 
+                        required 
+                        placeholder="Enter first name"
+                        autocomplete="given-name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="middle_name" class="form-label">
+                        <i class="fas fa-user"></i> Middle Name
+                    </label>
+                    <input 
+                        type="text" 
+                        id="middle_name" 
+                        name="middle_name" 
+                        class="form-control" 
+                        placeholder="Optional"
+                        autocomplete="additional-name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name" class="form-label">
+                        <i class="fas fa-user"></i> Last Name *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="last_name" 
+                        name="last_name" 
+                        class="form-control" 
+                        required 
+                        placeholder="Enter last name"
+                        autocomplete="family-name"
+                    >
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="email" class="form-label">
-                    <i class="fas fa-envelope"></i> Email Address *
-                </label>
-                <input 
-                    type="email"
-                    id="email"
-                    name="email"
-                    class="form-control"
-                    required
-                    placeholder="example@gmail.com"
-                    pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$"
-                    title="Only Gmail addresses (@gmail.com) are allowed"
-                    autocomplete="email"
-                >
+            <!-- Email and Phone -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <i class="fas fa-envelope"></i> Email Address *
+                    </label>
+                    <input 
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-control"
+                        required
+                        placeholder="example@gmail.com"
+                        pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$"
+                        title="Only Gmail addresses (@gmail.com) are allowed"
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="phone_no" class="form-label">
+                        <i class="fas fa-phone"></i> Phone Number *
+                    </label>
+                    <input 
+                        type="tel"
+                        id="phone_no"
+                        name="phone_no"
+                        class="form-control"
+                        required
+                        placeholder="10 digit number"
+                        pattern="^\d{10}$"
+                        title="Phone number must be exactly 10 digits"
+                        maxlength="10"
+                        autocomplete="tel"
+                    >
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="role" class="form-label">
+            <!-- Skills Selection -->
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label">
+                    <i class="fas fa-lightbulb"></i> Skills *
+                </label>
+                <div id="skillsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; max-height: 300px; overflow-y: auto; padding: 1rem; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color);">
+                    {% for skill in all_skills %}
+                    <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-primary); border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-color);" class="skill-option">
+                        <input 
+                            type="checkbox" 
+                            name="skills" 
+                            value="{{ skill.skill_id }}"
+                            data-skill-name="{{ skill.skill_name }}"
+                            data-category="{{ skill.category }}"
+                            style="width: 18px; height: 18px; cursor: pointer;"
+                        >
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500;">{{ skill.skill_name }}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">{{ skill.category }}</div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+                    <i class="fas fa-info-circle"></i> Select all skills this member possesses (proficiency will be set to level 1 by default)
+                </p>
+            </div>
+
+            <!-- Role Selection (Dynamic) -->
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label for="role_id" class="form-label">
                     <i class="fas fa-briefcase"></i> Job Role *
                 </label>
-                <input 
-                    type="text" 
-                    id="role" 
-                    name="role" 
-                    class="form-control" 
-                    required 
-                    placeholder="e.g., Software Engineer, Data Analyst"
-                    autocomplete="organization-title"
+                <select 
+                    id="role_id" 
+                    name="role_id" 
+                    class="form-control"
+                    required
                 >
+                    <option value="" disabled selected>Select a role...</option>
+                </select>
+                <p id="roleHelp" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+                    <i class="fas fa-info-circle"></i> Only roles matching selected skills will be available
+                </p>
             </div>
 
+            <!-- Action Buttons -->
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">
-                    <i class="fas fa-plus-circle"></i> Add Member
+                <button type="button" id="addNextBtn" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-plus-circle"></i> Save & Add Next Member
+                </button>
+                <button type="button" id="finishBtn" class="btn btn-success">
+                    <i class="fas fa-check"></i> Save & Finish
                 </button>
                 <a href="/members" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Cancel
@@ -81,12 +182,12 @@
         <div style="display: flex; gap: 1rem;">
             <i class="fas fa-info-circle" style="font-size: 1.5rem; color: var(--accent-primary); flex-shrink: 0;"></i>
             <div>
-                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">What happens next?</h4>
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">How it works</h4>
                 <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-left: 1.5rem; line-height: 1.8;">
-                    <li>Member will be added to the team database</li>
-                    <li>An audit log entry will be automatically created</li>
-                    <li>You can then assign skills to this member from their profile</li>
-                    <li>Member will appear in expert searches once skills are assigned</li>
+                    <li>Each member is automatically saved when you click "Save & Add Next Member"</li>
+                    <li>Previously added members will appear as collapsed cards above the form</li>
+                    <li>Select multiple skills - roles will filter based on skill requirements</li>
+                    <li>Click "Save & Finish" when you're done adding all members</li>
                 </ul>
             </div>
         </div>
@@ -97,14 +198,247 @@
 
 {% block extra_js %}
 <script>
-    // Form validation and UX enhancements
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const submitBtn = this.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="loading"></span> Adding Member...';
+    const allRoles = {{ all_roles_json|safe }};
+    const roleRequirements = {{ role_requirements_json|safe }};
+    let memberCounter = 1;
+    let addedMembers = [];
+
+    // Update available roles based on selected skills
+    function updateAvailableRoles() {
+        const selectedSkills = Array.from(document.querySelectorAll('input[name="skills"]:checked'))
+            .map(cb => parseInt(cb.value));
+        
+        const roleSelect = document.getElementById('role_id');
+        roleSelect.innerHTML = '<option value="" disabled selected>Select a role...</option>';
+        
+        if (selectedSkills.length === 0) {
+            document.getElementById('roleHelp').innerHTML = 
+                '<i class="fas fa-info-circle"></i> Select skills first to see available roles';
+            roleSelect.disabled = true;
+            return;
+        }
+
+        // Check each role to see if member meets requirements
+        const eligibleRoles = allRoles.filter(role => {
+            const requirements = roleRequirements[role.role_id] || [];
+            
+            if (requirements.length === 0) {
+                return true; // No requirements means anyone can have this role
+            }
+            
+            // Check if member has all required skills
+            return requirements.every(req => selectedSkills.includes(req.skill_id));
+        });
+
+        // Add only eligible roles to dropdown
+        if (eligibleRoles.length > 0) {
+            roleSelect.disabled = false;
+            eligibleRoles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role.role_id;
+                option.textContent = role.role_name;
+                roleSelect.appendChild(option);
+            });
+            
+            document.getElementById('roleHelp').innerHTML = 
+                `<i class="fas fa-check-circle" style="color: var(--accent-success);"></i> ${eligibleRoles.length} eligible role(s) available - please select one`;
+        } else {
+            roleSelect.disabled = true;
+            document.getElementById('roleHelp').innerHTML = 
+                '<i class="fas fa-exclamation-triangle" style="color: var(--accent-warning);"></i> No roles match the selected skills - please select different skills';
+        }
+    }
+
+    // Add event listeners to skill checkboxes
+    document.querySelectorAll('input[name="skills"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateAvailableRoles);
+    });
+
+    // Hover effect for skill options
+    document.querySelectorAll('.skill-option').forEach(label => {
+        label.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 4px 12px rgba(0, 217, 255, 0.15)';
+        });
+        label.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+
+    // Save current member and prepare for next
+    async function saveCurrentMember(isFinishing = false) {
+        const form = document.getElementById('memberForm');
+        
+        // Validate required fields
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return false;
+        }
+
+        const firstName = document.getElementById('first_name').value.trim();
+        const middleName = document.getElementById('middle_name').value.trim();
+        const lastName = document.getElementById('last_name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phoneNo = document.getElementById('phone_no').value.trim();
+        const roleId = document.getElementById('role_id').value;
+        
+        const selectedSkills = Array.from(document.querySelectorAll('input[name="skills"]:checked'))
+            .map(cb => ({
+                skill_id: parseInt(cb.value),
+                skill_name: cb.dataset.skillName,
+                category: cb.dataset.category
+            }));
+
+        if (selectedSkills.length === 0) {
+            alert('Please select at least one skill');
+            return false;
+        }
+
+        // Prepare data
+        const memberData = {
+            first_name: firstName,
+            middle_name: middleName,
+            last_name: lastName,
+            email: email,
+            phone_no: phoneNo,
+            role_id: roleId,
+            skills: selectedSkills.map(s => s.skill_id)
+        };
+
+        // Show loading state
+        const addNextBtn = document.getElementById('addNextBtn');
+        const finishBtn = document.getElementById('finishBtn');
+        const originalAddText = addNextBtn.innerHTML;
+        const originalFinishText = finishBtn.innerHTML;
+        
+        addNextBtn.disabled = true;
+        finishBtn.disabled = true;
+        addNextBtn.innerHTML = '<span class="loading"></span> Saving...';
+
+        try {
+            // Send to server
+            const response = await fetch('/members/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(memberData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // Add to local tracking
+                addedMembers.push({
+                    mem_id: result.mem_id,
+                    full_name: `${firstName} ${middleName} ${lastName}`.replace(/\s+/g, ' ').trim(),
+                    email: email,
+                    phone_no: phoneNo,
+                    role_name: result.role_name,
+                    skills: selectedSkills
+                });
+
+                // Show save status
+                const saveStatus = document.getElementById('saveStatus');
+                saveStatus.style.display = 'inline-block';
+                saveStatus.style.background = 'rgba(16, 185, 129, 0.1)';
+                saveStatus.style.color = 'var(--accent-success)';
+                saveStatus.style.border = '1px solid var(--accent-success)';
+
+                setTimeout(() => {
+                    saveStatus.style.display = 'none';
+                }, 2000);
+
+                if (isFinishing) {
+                    window.location.href = '/members';
+                } else {
+                    // Add collapsed member card
+                    addCollapsedMemberCard(addedMembers[addedMembers.length - 1]);
+                    
+                    // Reset form for next member
+                    resetForm();
+                    memberCounter++;
+                    document.getElementById('memberCount').textContent = memberCounter;
+                    
+                    // Scroll to form
+                    document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+
+                return true;
+            } else {
+                alert(result.message || 'Error saving member');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Network error. Please try again.');
+            return false;
+        } finally {
+            addNextBtn.disabled = false;
+            finishBtn.disabled = false;
+            addNextBtn.innerHTML = originalAddText;
+        }
+    }
+
+    // Add collapsed card for saved member
+    function addCollapsedMemberCard(member) {
+        const container = document.getElementById('addedMembersList');
+        
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.padding = '1rem 1.5rem';
+        card.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02))';
+        card.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+        card.style.marginBottom = '1rem';
+        
+        card.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <i class="fas fa-check-circle" style="color: var(--accent-success); font-size: 1.5rem;"></i>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 1.1rem;">${member.full_name}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                        <i class="fas fa-envelope"></i> ${member.email} &nbsp;|&nbsp;
+                        <i class="fas fa-phone"></i> ${member.phone_no} &nbsp;|&nbsp;
+                        <i class="fas fa-briefcase"></i> ${member.role_name} &nbsp;|&nbsp;
+                        <i class="fas fa-lightbulb"></i> ${member.skills.length} skill(s)
+                    </div>
+                </div>
+                <span class="badge badge-success" style="padding: 0.5rem 1rem;">
+                    <i class="fas fa-database"></i> Saved
+                </span>
+            </div>
+        `;
+        
+        container.appendChild(card);
+    }
+
+    // Reset form fields
+    function resetForm() {
+        document.getElementById('memberForm').reset();
+        document.querySelectorAll('input[name="skills"]').forEach(cb => cb.checked = false);
+        updateAvailableRoles();
+        document.getElementById('first_name').focus();
+    }
+
+    // Event listeners for buttons
+    document.getElementById('addNextBtn').addEventListener('click', () => {
+        saveCurrentMember(false);
+    });
+
+    document.getElementById('finishBtn').addEventListener('click', () => {
+        saveCurrentMember(true);
     });
 
     // Auto-focus first input
-    document.getElementById('full_name').focus();
+    document.getElementById('first_name').focus();
+
+    // Phone number validation - only allow digits
+    document.getElementById('phone_no').addEventListener('input', function(e) {
+        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    });
+    
+    // Initialize - disable role select until skills are selected
+    document.getElementById('role_id').disabled = true;
 </script>
 {% endblock %}

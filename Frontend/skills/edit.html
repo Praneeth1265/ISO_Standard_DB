@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Edit {{ skill.skill_name }} - Team Skills Manager{% endblock %}
+{% block title %}Edit Skill - Team Skills Manager{% endblock %}
 
 {% block content %}
 <div style="max-width: 800px; margin: 0 auto;">
     <div style="margin-bottom: 2rem;">
         <a href="/skills/{{ skill.skill_id }}" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
-            <i class="fas fa-arrow-left"></i> Back to Skill
+            <i class="fas fa-arrow-left"></i> Back to Skill Details
         </a>
         <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
             Edit Skill
         </h1>
         <p style="color: var(--text-secondary); font-size: 1.1rem;">
-            Update skill details for {{ skill.skill_name }}
+            Update skill information and role requirements
         </p>
     </div>
 
@@ -38,11 +38,132 @@
                     <i class="fas fa-tag"></i> Category *
                 </label>
                 <select name="category" id="category" class="form-control" required>
-                    <option value="Technical" {% if skill.category == 'Technical' %}selected{% endif %}>Technical</option>
-                    <option value="Clinical" {% if skill.category == 'Clinical' %}selected{% endif %}>Clinical</option>
-                    <option value="Soft Skill" {% if skill.category == 'Soft Skill' %}selected{% endif %}>Soft Skill</option>
-                    <option value="Regulatory" {% if skill.category == 'Regulatory' %}selected{% endif %}>Regulatory</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if cat == skill.category %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
                 </select>
+            </div>
+
+            <!-- Category Descriptions -->
+            <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem;">
+                <h4 style="font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-info-circle" style="color: var(--accent-primary);"></i>
+                    Category Guidelines
+                </h4>
+                <div style="display: grid; gap: 1rem;">
+                    <div>
+                        <strong style="color: var(--accent-primary);">Technical:</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Programming languages, software tools, databases, frameworks</span>
+                    </div>
+                    <div>
+                        <strong style="color: var(--accent-success);">Clinical:</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Medical knowledge, patient care, clinical analysis, healthcare protocols</span>
+                    </div>
+                    <div>
+                        <strong style="color: var(--accent-warning);">Regulatory:</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Compliance standards (ISO, FDA, IEC), quality assurance, validation</span>
+                    </div>
+                    <div>
+                        <strong style="color: var(--accent-secondary);">Soft Skill:</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.95rem;"> Communication, leadership, project management, teamwork</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Existing Role Requirements -->
+            {% if existing_requirements %}
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label class="form-label">
+                    <i class="fas fa-user-tag" style="color: var(--accent-success); margin-right: 0.5rem;"></i>
+                    Current Role Requirements
+                </label>
+                
+                <!-- Column Headers for existing requirements -->
+                <div style="margin-bottom: 0.5rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div style="flex: 2;">
+                            <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);">Role</span>
+                        </div>
+                        <div style="flex: 1;">
+                            <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);">Min Skill Proficiency Req</span>
+                        </div>
+                        <div style="width: 42px;"></div>
+                    </div>
+                </div>
+
+                <div id="existing-roles-container">
+                    {% for req in existing_requirements %}
+                    <div class="role-requirement-row" id="existing-role-{{ req.role_id }}" style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; padding: 1rem; background: var(--bg-tertiary); border-radius: 8px;">
+                        <div style="flex: 2;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-user-tie" style="color: var(--accent-primary);"></i>
+                                <strong>{{ req.role_name }}</strong>
+                            </div>
+                            <input type="hidden" name="existing_role_ids[]" value="{{ req.role_id }}">
+                        </div>
+                        <div style="flex: 1;">
+                            <select name="existing_min_proficiencies[]" class="form-control">
+                                <option value="1" {% if req.min_proficiency_required == 1 %}selected{% endif %}>1 - Beginner</option>
+                                <option value="2" {% if req.min_proficiency_required == 2 %}selected{% endif %}>2 - Intermediate</option>
+                                <option value="3" {% if req.min_proficiency_required == 3 %}selected{% endif %}>3 - Expert</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-danger" onclick="markRoleForDeletion({{ req.role_id }})" style="height: 42px; width: 42px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Add New Role Requirements -->
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label class="form-label">
+                    <i class="fas fa-plus-circle" style="color: var(--accent-secondary); margin-right: 0.5rem;"></i>
+                    Add New Role Requirements
+                </label>
+                
+                <!-- Column Headers for new requirements (initially hidden) -->
+                <div id="new-role-headers" style="display: none; margin-bottom: 0.5rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div style="flex: 2;">
+                            <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);">Role</span>
+                        </div>
+                        <div style="flex: 1;">
+                            <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);">Min Skill Proficiency Req</span>
+                        </div>
+                        <div style="width: 42px;"></div>
+                    </div>
+                </div>
+
+                <div id="new-roles-container" style="margin-bottom: 1rem;">
+                    <!-- New roles will be added here dynamically -->
+                </div>
+                <button type="button" id="add-role-btn" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> Add Role
+                </button>
+            </div>
+
+            <!-- Hidden field to track roles marked for deletion -->
+            <input type="hidden" name="roles_to_delete" id="roles_to_delete" value="">
+
+            <!-- Info Box -->
+            <div style="background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05)); padding: 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-primary);">
+                <div style="display: flex; gap: 1rem;">
+                    <i class="fas fa-info-circle" style="color: var(--accent-primary); font-size: 1.25rem; margin-top: 0.2rem;"></i>
+                    <div>
+                        <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
+                            Role Requirements
+                        </h4>
+                        <ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-left: 1.25rem;">
+                            <li>Update minimum proficiency levels for existing role requirements</li>
+                            <li>Remove existing assignments by clicking the trash icon</li>
+                            <li>Add new role requirements using the "Add Role" button</li>
+                            <li>Members must meet or exceed these levels to be eligible for roles</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
@@ -55,45 +176,179 @@
             </div>
         </form>
     </div>
-
-    <!-- Info Card -->
-    <div class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(239, 68, 68, 0.05)); border-color: var(--accent-warning);">
-        <div style="display: flex; gap: 1rem;">
-            <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--accent-warning); flex-shrink: 0;"></i>
-            <div>
-                <h4 style="font-weight: 600; margin-bottom: 0.5rem; color: var(--accent-warning);">Important Note</h4>
-                <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-left: 1.5rem; line-height: 1.8;">
-                    <li>Changes will be logged in the audit trail via triggers</li>
-                    <li>All team member assignments will be updated automatically</li>
-                    <li>Proficiency levels assigned to members remain unchanged</li>
-                </ul>
-            </div>
-        </div>
-    </div>
 </div>
 
-{% endblock %}
-
-{% block extra_js %}
 <script>
-    // Form validation
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const submitBtn = this.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="loading"></span> Saving Changes...';
-    });
+// Available roles from backend
+const availableRoles = {{ available_roles_json | safe }};
+const existingRoleIds = new Set({{ existing_role_ids_json | safe }}.map(String));
+let roleCounter = 0;
+const selectedNewRoles = new Set(); // Track newly selected roles
+const rolesToDelete = new Set(); // Track roles marked for deletion
 
-    // Category selection visual feedback
-    const categorySelect = document.getElementById('category');
+// Function to get available roles (excluding existing and already selected new ones)
+function getAvailableRolesOptions() {
+    return availableRoles
+        .filter(role => !selectedNewRoles.has(role.role_id.toString()))
+        .map(role => `<option value="${role.role_id}">${role.role_name}</option>`)
+        .join('');
+}
+
+// Function to update all new role dropdowns
+function updateAllRoleDropdowns() {
+    document.querySelectorAll('.new-role-select').forEach(select => {
+        const currentValue = select.value;
+        const availableOptions = availableRoles
+            .filter(role => role.role_id.toString() === currentValue || !selectedNewRoles.has(role.role_id.toString()))
+            .map(role => `<option value="${role.role_id}" ${role.role_id.toString() === currentValue ? 'selected' : ''}>${role.role_name}</option>`)
+            .join('');
+        
+        select.innerHTML = '<option value="">Select a role...</option>' + availableOptions;
+    });
+}
+
+// Function to show/hide headers for new roles based on whether there are role rows
+function updateNewHeadersVisibility() {
+    const container = document.getElementById('new-roles-container');
+    const headers = document.getElementById('new-role-headers');
+    const hasRows = container.children.length > 0;
+    headers.style.display = hasRows ? 'block' : 'none';
+}
+
+// Add new role assignment row
+document.getElementById('add-role-btn').addEventListener('click', function() {
+    const container = document.getElementById('new-roles-container');
+    const roleRow = document.createElement('div');
+    roleRow.className = 'role-requirement-row';
+    roleRow.style.cssText = 'display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;';
+    roleRow.id = `new-role-row-${roleCounter}`;
+    
+    roleRow.innerHTML = `
+        <div style="flex: 2;">
+            <select name="new_role_ids[]" class="form-control new-role-select" data-row-id="${roleCounter}" onchange="handleNewRoleChange(this)">
+                <option value="">Select a role...</option>
+                ${getAvailableRolesOptions()}
+            </select>
+        </div>
+        <div style="flex: 1;">
+            <select name="new_min_proficiencies[]" class="form-control">
+                <option value="">Min Level...</option>
+                <option value="1">1 - Beginner</option>
+                <option value="2">2 - Intermediate</option>
+                <option value="3">3 - Expert</option>
+            </select>
+        </div>
+        <button type="button" class="btn btn-danger" onclick="removeNewRoleRow(${roleCounter})" style="height: 42px; width: 42px;">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    
+    container.appendChild(roleRow);
+    roleCounter++;
+    updateNewHeadersVisibility();
+});
+
+// Handle new role selection change
+function handleNewRoleChange(selectElement) {
+    const previousValue = selectElement.dataset.previousValue;
+    const newValue = selectElement.value;
+    
+    // Remove previous selection from the set
+    if (previousValue) {
+        selectedNewRoles.delete(previousValue);
+    }
+    
+    // Add new selection to the set
+    if (newValue) {
+        selectedNewRoles.add(newValue);
+        selectElement.dataset.previousValue = newValue;
+    } else {
+        delete selectElement.dataset.previousValue;
+    }
+    
+    // Update all dropdowns to reflect available roles
+    updateAllRoleDropdowns();
+}
+
+// Remove new role requirement row
+function removeNewRoleRow(id) {
+    const row = document.getElementById(`new-role-row-${id}`);
+    if (row) {
+        const select = row.querySelector('.new-role-select');
+        const selectedValue = select.dataset.previousValue;
+        
+        // Remove from selected roles set
+        if (selectedValue) {
+            selectedNewRoles.delete(selectedValue);
+        }
+        
+        row.remove();
+        
+        // Update all remaining dropdowns
+        updateAllRoleDropdowns();
+        updateNewHeadersVisibility();
+    }
+}
+
+// Mark existing role for deletion
+function markRoleForDeletion(roleId) {
+    const row = document.getElementById(`existing-role-${roleId}`);
+    if (row) {
+        if (confirm('Are you sure you want to remove this role requirement?')) {
+            row.style.display = 'none';
+            rolesToDelete.add(roleId.toString());
+            
+            // Update hidden field
+            document.getElementById('roles_to_delete').value = Array.from(rolesToDelete).join(',');
+            
+            // Make this role available in the new roles dropdown
+            updateAllRoleDropdowns();
+        }
+    }
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const newRoleSelects = document.querySelectorAll('select[name="new_role_ids[]"]');
+    const newProficiencySelects = document.querySelectorAll('select[name="new_min_proficiencies[]"]');
+    
+    // Check if any new role row has incomplete data
+    for (let i = 0; i < newRoleSelects.length; i++) {
+        if (newRoleSelects[i].value && !newProficiencySelects[i].value) {
+            e.preventDefault();
+            alert('Please select a minimum proficiency level for all selected roles.');
+            newProficiencySelects[i].focus();
+            return false;
+        }
+        
+        if (!newRoleSelects[i].value && newProficiencySelects[i].value) {
+            e.preventDefault();
+            alert('Please select a role for all proficiency levels specified.');
+            newRoleSelects[i].focus();
+            return false;
+        }
+    }
+    
+    // Disable submit button
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading"></span> Saving Changes...';
+});
+
+// Auto-focus first input
+document.getElementById('skill_name').focus();
+
+// Category selection visual feedback
+const categorySelect = document.getElementById('category');
+categorySelect.addEventListener('change', function() {
     const colors = {
         'Technical': 'var(--accent-primary)',
         'Clinical': 'var(--accent-success)',
         'Regulatory': 'var(--accent-warning)',
         'Soft Skill': 'var(--accent-secondary)'
     };
-    categorySelect.style.borderColor = colors[categorySelect.value];
-    categorySelect.addEventListener('change', function() {
-        this.style.borderColor = colors[this.value];
-    });
+    this.style.borderColor = colors[this.value] || 'var(--border-color)';
+});
 </script>
+
 {% endblock %}

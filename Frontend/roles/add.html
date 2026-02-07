@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Role - Team Skills Manager{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <!-- Header -->
+    <div style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <a href="/roles" style="color: var(--text-secondary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; transition: color 0.3s ease;">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Roles</span>
+            </a>
+        </div>
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            Create New Role
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+            Define a new organizational role with description and skill requirements
+        </p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card">
+        <form method="POST" action="/roles/add">
+            <div class="form-group">
+                <label for="role_name" class="form-label">
+                    <i class="fas fa-user-tag" style="color: var(--accent-primary); margin-right: 0.5rem;"></i>
+                    Role Name *
+                </label>
+                <input 
+                    type="text" 
+                    id="role_name" 
+                    name="role_name" 
+                    class="form-control" 
+                    placeholder="e.g., Senior Backend Developer, ML Engineer, etc."
+                    required
+                    maxlength="50"
+                >
+                <small style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                    Enter a descriptive name for this role (max 50 characters)
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">
+                    <i class="fas fa-align-left" style="color: var(--accent-secondary); margin-right: 0.5rem;"></i>
+                    Description *
+                </label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    class="form-control" 
+                    rows="4"
+                    placeholder="Provide a detailed description of this role's responsibilities and expectations..."
+                    required
+                    style="resize: vertical; min-height: 100px;"
+                ></textarea>
+                <small style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                    Describe the role's purpose, key responsibilities, and expectations
+                </small>
+            </div>
+
+            <!-- Skills Requirements Section -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-cogs" style="color: var(--accent-success); margin-right: 0.5rem;"></i>
+                    Required Skills (Optional)
+                </label>
+                <div id="skills-container" style="margin-bottom: 1rem;">
+                    <!-- Skills will be added here dynamically -->
+                </div>
+                <button type="button" id="add-skill-btn" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> Add Skill Requirement
+                </button>
+                <small style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                    Click "Add Skill Requirement" to add multiple skills. Set minimum proficiency levels (1-3) for each.
+                </small>
+            </div>
+
+            <!-- Info Box -->
+            <div style="background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05)); padding: 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-primary);">
+                <div style="display: flex; gap: 1rem;">
+                    <i class="fas fa-info-circle" style="color: var(--accent-primary); font-size: 1.25rem; margin-top: 0.2rem;"></i>
+                    <div>
+                        <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
+                            Skill Requirements
+                        </h4>
+                        <ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-left: 1.25rem;">
+                            <li>You can add multiple skill requirements by clicking "Add Skill Requirement"</li>
+                            <li>Proficiency levels: 1 (Beginner), 2 (Intermediate), 3 (Expert)</li>
+                            <li>Members can only be assigned if they meet all skill requirements</li>
+                            <li>You can also add skill requirements later from the role details page</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <a href="/roles" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check"></i> Create Role
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Examples Card -->
+    <div class="card" style="margin-top: 2rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.03), rgba(0, 217, 255, 0.03));">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-lightbulb" style="color: var(--accent-success);"></i>
+            Role Examples
+        </h3>
+        <div style="display: grid; gap: 1rem;">
+            <div style="background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--accent-primary);">
+                <div style="font-weight: 600; margin-bottom: 0.25rem; color: var(--text-primary);">Senior Software Engineer</div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Lead developer responsible for architecting solutions, mentoring junior developers, and ensuring code quality.</div>
+            </div>
+            <div style="background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--accent-secondary);">
+                <div style="font-weight: 600; margin-bottom: 0.25rem; color: var(--text-primary);">Data Analyst</div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Analyzes clinical data, creates reports, and provides insights to support decision-making processes.</div>
+            </div>
+            <div style="background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--accent-success);">
+                <div style="font-weight: 600; margin-bottom: 0.25rem; color: var(--text-primary);">Regulatory Affairs Specialist</div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Ensures compliance with medical device regulations, manages documentation, and coordinates with regulatory bodies.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Skills data from backend
+const availableSkills = {{ skills_json | safe }};
+let skillCounter = 0;
+const selectedSkills = new Set(); // Track selected skills to prevent duplicates
+
+// Function to get available skills (excluding already selected ones)
+function getAvailableSkillsOptions() {
+    return availableSkills
+        .filter(skill => !selectedSkills.has(skill.skill_id.toString()))
+        .map(skill => `<option value="${skill.skill_id}">${skill.skill_name} (${skill.category})</option>`)
+        .join('');
+}
+
+// Function to update all skill dropdowns
+function updateAllSkillDropdowns() {
+    document.querySelectorAll('.skill-select').forEach(select => {
+        const currentValue = select.value;
+        const availableOptions = availableSkills
+            .filter(skill => skill.skill_id.toString() === currentValue || !selectedSkills.has(skill.skill_id.toString()))
+            .map(skill => `<option value="${skill.skill_id}" ${skill.skill_id.toString() === currentValue ? 'selected' : ''}>${skill.skill_name} (${skill.category})</option>`)
+            .join('');
+        
+        select.innerHTML = '<option value="">Select a skill...</option>' + availableOptions;
+    });
+}
+
+// Add skill requirement row
+document.getElementById('add-skill-btn').addEventListener('click', function() {
+    const container = document.getElementById('skills-container');
+    const skillRow = document.createElement('div');
+    skillRow.className = 'skill-requirement-row';
+    skillRow.style.cssText = 'display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;';
+    skillRow.id = `skill-row-${skillCounter}`;
+    
+    skillRow.innerHTML = `
+        <div style="flex: 2;">
+            <select name="skill_ids[]" class="form-control skill-select" data-row-id="${skillCounter}" onchange="handleSkillChange(this)">
+                <option value="">Select a skill...</option>
+                ${getAvailableSkillsOptions()}
+            </select>
+        </div>
+        <div style="flex: 1;">
+            <select name="min_proficiencies[]" class="form-control">
+                <option value="">Min Level</option>
+                <option value="1">1 - Beginner</option>
+                <option value="2">2 - Intermediate</option>
+                <option value="3">3 - Expert</option>
+            </select>
+        </div>
+        <button type="button" class="btn btn-danger" onclick="removeSkillRow(${skillCounter})" style="padding: 0.5rem 0.75rem;">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    
+    container.appendChild(skillRow);
+    skillCounter++;
+});
+
+// Handle skill selection change
+function handleSkillChange(selectElement) {
+    const previousValue = selectElement.dataset.previousValue;
+    const newValue = selectElement.value;
+    
+    // Remove previous selection from the set
+    if (previousValue) {
+        selectedSkills.delete(previousValue);
+    }
+    
+    // Add new selection to the set
+    if (newValue) {
+        selectedSkills.add(newValue);
+        selectElement.dataset.previousValue = newValue;
+    } else {
+        delete selectElement.dataset.previousValue;
+    }
+    
+    // Update all dropdowns to reflect available skills
+    updateAllSkillDropdowns();
+}
+
+// Remove skill requirement row
+function removeSkillRow(id) {
+    const row = document.getElementById(`skill-row-${id}`);
+    if (row) {
+        const select = row.querySelector('.skill-select');
+        const selectedValue = select.dataset.previousValue;
+        
+        // Remove from selected skills set
+        if (selectedValue) {
+            selectedSkills.delete(selectedValue);
+        }
+        
+        row.remove();
+        
+        // Update all remaining dropdowns
+        updateAllSkillDropdowns();
+    }
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const skillSelects = document.querySelectorAll('select[name="skill_ids[]"]');
+    const proficiencySelects = document.querySelectorAll('select[name="min_proficiencies[]"]');
+    
+    // Check if any skill row has a skill selected but no proficiency
+    for (let i = 0; i < skillSelects.length; i++) {
+        if (skillSelects[i].value && !proficiencySelects[i].value) {
+            e.preventDefault();
+            alert('Please select a minimum proficiency level for all selected skills.');
+            proficiencySelects[i].focus();
+            return false;
+        }
+        
+        if (!skillSelects[i].value && proficiencySelects[i].value) {
+            e.preventDefault();
+            alert('Please select a skill for all proficiency levels specified.');
+            skillSelects[i].focus();
+            return false;
+        }
+    }
+});
+</script>
+{% endblock %}

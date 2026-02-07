@@ -1,5 +1,5 @@
 import pytest
-from app import get_db_connection
+from ISO_Standard_DB.app import get_db_connection
 
 def test_member_update_delete_triggers(client):
     """Test UPDATE and DELETE triggers for team_members table"""
