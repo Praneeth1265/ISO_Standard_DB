@@ -9,7 +9,7 @@
             Team Members
         </h1>
         <p style="color: var(--text-secondary); font-size: 1.1rem;">
-            {{ members|length }} active team members
+            <span id="displayCount">{{ members|length }}</span> active team members
         </p>
     </div>
     <a href="/members/add" class="btn btn-primary">
@@ -17,10 +17,27 @@
     </a>
 </div>
 
+<!-- Search Bar (No background div) -->
 {% if members %}
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+<div style="position: relative; margin-bottom: 2rem;">
+    <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+    <input 
+        type="text" 
+        id="memberSearch" 
+        placeholder="Search members by name, email, or role..." 
+        class="form-control"
+        style="padding-left: 2.5rem;"
+    >
+</div>
+{% endif %}
+
+{% if members %}
+<div id="membersGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
     {% for member in members %}
-    <div class="card" style="position: relative; overflow: hidden;">
+    <div class="member-card card" style="position: relative; overflow: hidden;" 
+         data-name="{{ member.full_name|lower }}" 
+         data-email="{{ member.email|lower }}" 
+         data-role="{{ member.role_name|lower }}">
         <!-- Gradient accent -->
         <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));"></div>
         
@@ -35,7 +52,7 @@
                     {{ member.full_name }}
                 </h3>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">
-                    {{ member.role }}
+                    {{ member.role_name }}
                 </p>
                 <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
                     <i class="fas fa-envelope"></i>
@@ -44,10 +61,9 @@
             </div>
         </div>
 
-        <!-- Skills count -->
+        <!-- Skills count (no bulb icon) -->
         <div style="padding: 0.75rem; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-lightbulb" style="color: var(--accent-warning);"></i>
                 <span style="color: var(--text-secondary); font-size: 0.9rem;">Skills</span>
             </div>
             <span style="font-weight: 700; font-size: 1.1rem; color: var(--accent-primary); font-family: 'JetBrains Mono', monospace;">
@@ -56,17 +72,25 @@
         </div>
 
         <!-- Actions -->
-        <div style="display: flex; gap: 0.5rem;">
-            <a href="/members/{{ member.mem_id }}" class="btn btn-secondary" style="flex: 1; justify-content: center; font-size: 0.9rem;">
-                <i class="fas fa-eye"></i> View Profile
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <a href="/members/{{ member.mem_id }}" class="btn btn-secondary" style="justify-content: center; font-size: 0.9rem;">
+                <i class="fas fa-eye"></i> View
             </a>
-            <a href="/members/{{ member.mem_id }}/edit" class="btn btn-secondary" style="padding: 0.75rem;">
-                <i class="fas fa-edit"></i>
+            <a href="/members/{{ member.mem_id }}/edit" class="btn btn-secondary" style="justify-content: center; font-size: 0.9rem;">
+                <i class="fas fa-edit"></i> Edit
             </a>
         </div>
     </div>
     {% endfor %}
 </div>
+
+<!-- No Results Message -->
+<div id="noResults" style="display: none;" class="card" style="text-align: center; padding: 3rem 2rem;">
+    <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.3;"></i>
+    <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-secondary);">No members found</h3>
+    <p style="color: var(--text-muted);">Try adjusting your search terms</p>
+</div>
+
 {% else %}
 <div class="card" style="text-align: center; padding: 4rem 2rem;">
     <i class="fas fa-users" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 1rem; opacity: 0.3;"></i>
@@ -77,4 +101,47 @@
     </a>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    const searchInput = document.getElementById('memberSearch');
+    const memberCards = document.querySelectorAll('.member-card');
+    const noResults = document.getElementById('noResults');
+    const displayCount = document.getElementById('displayCount');
+    const totalMembers = {{ members|length }};
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            memberCards.forEach(card => {
+                const name = card.dataset.name;
+                const email = card.dataset.email;
+                const role = card.dataset.role;
+
+                if (name.includes(searchTerm) || email.includes(searchTerm) || role.includes(searchTerm)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update count
+            displayCount.textContent = visibleCount;
+
+            // Show/hide no results message
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+                document.getElementById('membersGrid').style.display = 'none';
+            } else {
+                noResults.style.display = 'none';
+                document.getElementById('membersGrid').style.display = 'grid';
+            }
+        });
+    }
+</script>
 {% endblock %}

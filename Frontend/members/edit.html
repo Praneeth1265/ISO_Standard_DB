@@ -3,7 +3,7 @@
 {% block title %}Edit {{ member.full_name }} - Team Skills Manager{% endblock %}
 
 {% block content %}
-<div style="max-width: 1000px; margin: 0 auto;">
+<div style="max-width: 1400px; margin: 0 auto;">
     <div style="margin-bottom: 2rem;">
         <a href="/members/{{ member.mem_id }}" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
             <i class="fas fa-arrow-left"></i> Back to Profile
@@ -17,7 +17,7 @@
     </div>
 
     <div class="card">
-        <form method="POST" action="/members/{{ member.mem_id }}/edit">
+        <form method="POST" action="/members/{{ member.mem_id }}/edit" id="editForm">
             <!-- Name Fields -->
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                 <div class="form-group">
@@ -113,34 +113,72 @@
             <!-- Skills Management -->
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label class="form-label">
-                    <i class="fas fa-lightbulb"></i> Skills
+                    <i class="fas fa-certificate"></i> Skills & Proficiency
                 </label>
-                <div id="skillsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; max-height: 350px; overflow-y: auto; padding: 1rem; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color);">
+                
+                <!-- Skills Search Bar -->
+                <div style="position: relative; margin-bottom: 1rem;">
+                    <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); z-index: 1;"></i>
+                    <input 
+                        type="text" 
+                        id="skillsSearch" 
+                        placeholder="Search skills by name or category..." 
+                        class="form-control"
+                        style="padding-left: 2.5rem;"
+                    >
+                </div>
+
+                <!-- 3x3 Grid with Scrollbar (max-height 450px) -->
+                <div id="skillsContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; max-height: 450px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary);">
                     {% for skill in all_skills %}
-                    <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-primary); border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-color);" class="skill-option">
-                        <input 
-                            type="checkbox" 
-                            name="skills" 
-                            value="{{ skill.skill_id }}"
-                            data-skill-name="{{ skill.skill_name }}"
-                            data-category="{{ skill.category }}"
-                            {% if skill.skill_id in member_skill_ids %}checked{% endif %}
-                            style="width: 18px; height: 18px; cursor: pointer;"
-                        >
-                        <div style="flex: 1;">
-                            <div style="font-weight: 500;">{{ skill.skill_name }}</div>
-                            <div style="font-size: 0.85rem; color: var(--text-muted);">{{ skill.category }}</div>
+                    <label style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; background: var(--bg-primary); border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 2px solid {% if skill.skill_id in member_skill_ids %}#10b981{% else %}var(--border-color){% endif %}; min-height: 120px;" 
+                           class="skill-option" 
+                           data-skill-name="{{ skill.skill_name|lower }}" 
+                           data-category="{{ skill.category|lower }}"
+                           data-skill-id="{{ skill.skill_id }}">
+                        
+                        <!-- Top row: Checkbox and Skill Info -->
+                        <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                            <input 
+                                type="checkbox" 
+                                name="skills" 
+                                value="{{ skill.skill_id }}"
+                                data-skill-name="{{ skill.skill_name }}"
+                                data-category="{{ skill.category }}"
+                                {% if skill.skill_id in member_skill_ids %}checked{% endif %}
+                                style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; margin-top: 2px;"
+                            >
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ skill.skill_name }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">{{ skill.category }}</div>
+                            </div>
                         </div>
-                        {% if skill.skill_id in member_skill_ids %}
-                        <span class="badge badge-success" style="font-size: 0.75rem;">
-                            <i class="fas fa-check"></i> Assigned
-                        </span>
-                        {% endif %}
+
+                        <!-- Bottom row: Proficiency Controls -->
+                        <div class="proficiency-controls" style="display: {% if skill.skill_id in member_skill_ids %}flex{% else %}none{% endif %}; flex-direction: column; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                                <button type="button" class="prof-down" data-skill-id="{{ skill.skill_id }}" 
+                                        style="width: 32px; height: 32px; border: 1px solid var(--border-color); background: var(--bg-secondary); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                                        onmouseover="this.style.background='var(--accent-primary)'; this.style.color='white'; this.style.borderColor='var(--accent-primary)';"
+                                        onmouseout="this.style.background='var(--bg-secondary)'; this.style.color=''; this.style.borderColor='var(--border-color)';">
+                                    <i class="fas fa-minus" style="font-size: 0.8rem;"></i>
+                                </button>
+                                <span class="prof-label" data-skill-id="{{ skill.skill_id }}" 
+                                      style="font-weight: 600; font-size: 0.85rem; color: var(--accent-primary); text-align: center; flex: 1;">Intermediate</span>
+                                <button type="button" class="prof-up" data-skill-id="{{ skill.skill_id }}" 
+                                        style="width: 32px; height: 32px; border: 1px solid var(--border-color); background: var(--bg-secondary); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                                        onmouseover="this.style.background='var(--accent-primary)'; this.style.color='white'; this.style.borderColor='var(--accent-primary)';"
+                                        onmouseout="this.style.background='var(--bg-secondary)'; this.style.color=''; this.style.borderColor='var(--border-color)';">
+                                    <i class="fas fa-plus" style="font-size: 0.8rem;"></i>
+                                </button>
+                            </div>
+                            <input type="hidden" name="proficiency_{{ skill.skill_id }}" class="prof-input" value="2">
+                        </div>
                     </label>
                     {% endfor %}
                 </div>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
-                    <i class="fas fa-info-circle"></i> Check/uncheck skills to add or remove them. New skills will be added with proficiency level 1.
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.75rem;">
+                    <i class="fas fa-info-circle"></i> Green border = assigned. Use +/- buttons to adjust: Beginner (1), Intermediate (2), Advanced (3). New skills default to Intermediate.
                 </p>
             </div>
 
@@ -172,38 +210,11 @@
                 <button type="submit" class="btn btn-primary" style="flex: 1;">
                     <i class="fas fa-save"></i> Save Changes
                 </button>
-                <a href="/members/{{ member.mem_id }}" class="btn btn-secondary">
+                <a href="/members" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Cancel
                 </a>
             </div>
         </form>
-    </div>
-
-    <!-- Info Card -->
-    <div class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(239, 68, 68, 0.05)); border-color: var(--accent-warning);">
-        <div style="display: flex; gap: 1rem;">
-            <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--accent-warning); flex-shrink: 0;"></i>
-            <div>
-                <h4 style="font-weight: 600; margin-bottom: 0.5rem; color: var(--accent-warning);">Important Notes</h4>
-                <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-left: 1.5rem; line-height: 1.8;">
-                    <li>All changes will be logged in the audit trail</li>
-                    <li>Adding new skills will set them to proficiency level 1 (you can update proficiency from the profile page)</li>
-                    <li>Removing skills will delete all associated proficiency data</li>
-                    <li>Role assignment will be validated against skill requirements</li>
-                    <li>Email and phone number must be unique</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- Skill Changes Preview -->
-    <div id="changesPreview" style="display: none;" class="card" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05)); border-color: var(--accent-primary);">
-        <h4 style="font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-exchange-alt" style="color: var(--accent-primary);"></i>
-            Pending Skill Changes
-        </h4>
-        <div id="skillsToAdd" style="margin-bottom: 1rem;"></div>
-        <div id="skillsToRemove"></div>
     </div>
 </div>
 
@@ -213,9 +224,96 @@
 <script>
     const allRoles = {{ all_roles_json|safe }};
     const roleRequirements = {{ role_requirements_json|safe }};
-    const currentRoleId = {{ member.role_id or 'null' }};
-    const originalSkills = new Set({{ member_skill_ids|tojson }});
+    const memberSkills = {{ member_skill_ids|tojson }};
+    const memberProficiencies = {{ member_skill_proficiencies|safe }};
     
+    const profLabels = ['', 'Beginner', 'Intermediate', 'Advanced'];
+    
+    // Set existing proficiency levels on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        for (const [skillId, profLevel] of Object.entries(memberProficiencies)) {
+            const labelSpan = document.querySelector(`.prof-label[data-skill-id="${skillId}"]`);
+            const input = document.querySelector(`input[name="proficiency_${skillId}"]`);
+            if (labelSpan && input) {
+                labelSpan.textContent = profLabels[profLevel] || 'Intermediate';
+                input.value = profLevel;
+            }
+        }
+    });
+    
+    // Skills search functionality
+    const skillsSearch = document.getElementById('skillsSearch');
+    const skillOptions = document.querySelectorAll('.skill-option');
+
+    skillsSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        skillOptions.forEach(option => {
+            const skillName = option.dataset.skillName;
+            const category = option.dataset.category;
+            if (skillName.includes(searchTerm) || category.includes(searchTerm)) {
+                option.style.display = 'flex';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+    });
+
+    // Proficiency controls
+    document.querySelectorAll('.prof-up').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const skillId = this.dataset.skillId;
+            const labelSpan = document.querySelector(`.prof-label[data-skill-id="${skillId}"]`);
+            const input = document.querySelector(`input[name="proficiency_${skillId}"]`);
+            let level = parseInt(input.value);
+            if (level < 3) {
+                level++;
+                labelSpan.textContent = profLabels[level];
+                input.value = level;
+            }
+        });
+    });
+
+    document.querySelectorAll('.prof-down').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const skillId = this.dataset.skillId;
+            const labelSpan = document.querySelector(`.prof-label[data-skill-id="${skillId}"]`);
+            const input = document.querySelector(`input[name="proficiency_${skillId}"]`);
+            let level = parseInt(input.value);
+            if (level > 1) {
+                level--;
+                labelSpan.textContent = profLabels[level];
+                input.value = level;
+            }
+        });
+    });
+
+    // Handle skill checkbox changes
+    document.querySelectorAll('input[name="skills"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function(e) {
+            e.stopPropagation();
+            const skillId = this.value;
+            const option = this.closest('.skill-option');
+            const profControls = option.querySelector('.proficiency-controls');
+            
+            if (this.checked) {
+                profControls.style.display = 'flex';
+                option.style.borderColor = '#10b981';
+                const labelSpan = option.querySelector('.prof-label');
+                labelSpan.textContent = 'Intermediate';
+                option.querySelector('.prof-input').value = '2';
+            } else {
+                profControls.style.display = 'none';
+                option.style.borderColor = 'var(--border-color)';
+            }
+            
+            updateAvailableRoles();
+        });
+    });
+
     // Update available roles based on selected skills
     function updateAvailableRoles() {
         const selectedSkills = Array.from(document.querySelectorAll('input[name="skills"]:checked'))
@@ -224,7 +322,6 @@
         const roleSelect = document.getElementById('role_id');
         const currentSelection = roleSelect.value;
         
-        // Clear and rebuild options
         roleSelect.innerHTML = '<option value="" disabled>Select a role...</option>';
         
         if (selectedSkills.length === 0) {
@@ -234,19 +331,12 @@
             return;
         }
 
-        // Check each role to see if member meets requirements
         const eligibleRoles = allRoles.filter(role => {
             const requirements = roleRequirements[role.role_id] || [];
-            
-            if (requirements.length === 0) {
-                return true; // No requirements means anyone can have this role
-            }
-            
-            // Check if member has all required skills
+            if (requirements.length === 0) return true;
             return requirements.every(req => selectedSkills.includes(req.skill_id));
         });
 
-        // Add only eligible roles to dropdown
         if (eligibleRoles.length > 0) {
             roleSelect.disabled = false;
             eligibleRoles.forEach(role => {
@@ -256,14 +346,10 @@
                 roleSelect.appendChild(option);
             });
 
-            // Restore previous selection only if it's still eligible
             if (currentSelection && eligibleRoles.some(r => r.role_id == currentSelection)) {
                 roleSelect.value = currentSelection;
-            } else {
-                // If current selection is not eligible, select first available role
-                if (eligibleRoles.length > 0) {
-                    roleSelect.value = eligibleRoles[0].role_id;
-                }
+            } else if (eligibleRoles.length > 0) {
+                roleSelect.value = eligibleRoles[0].role_id;
             }
             
             document.getElementById('roleHelp').innerHTML = 
@@ -271,85 +357,20 @@
         } else {
             roleSelect.disabled = true;
             document.getElementById('roleHelp').innerHTML = 
-                '<i class="fas fa-exclamation-triangle" style="color: var(--accent-warning);"></i> No roles match the selected skills - please select different skills';
+                '<i class="fas fa-exclamation-triangle" style="color: var(--accent-warning);"></i> No roles match the selected skills';
         }
     }
-
-    // Update changes preview
-    function updateChangesPreview() {
-        const currentSkills = new Set(
-            Array.from(document.querySelectorAll('input[name="skills"]:checked'))
-                .map(cb => parseInt(cb.value))
-        );
-
-        const skillsToAdd = Array.from(currentSkills).filter(id => !originalSkills.has(id));
-        const skillsToRemove = Array.from(originalSkills).filter(id => !currentSkills.has(id));
-
-        const changesPreview = document.getElementById('changesPreview');
-        const addContainer = document.getElementById('skillsToAdd');
-        const removeContainer = document.getElementById('skillsToRemove');
-
-        if (skillsToAdd.length === 0 && skillsToRemove.length === 0) {
-            changesPreview.style.display = 'none';
-            return;
-        }
-
-        changesPreview.style.display = 'block';
-
-        // Skills to add
-        if (skillsToAdd.length > 0) {
-            const skillNames = skillsToAdd.map(id => {
-                const checkbox = document.querySelector(`input[name="skills"][value="${id}"]`);
-                return checkbox.dataset.skillName;
-            });
-            addContainer.innerHTML = `
-                <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border: 1px solid var(--accent-success);">
-                    <strong style="color: var(--accent-success);">
-                        <i class="fas fa-plus-circle"></i> Adding ${skillsToAdd.length} skill(s):
-                    </strong>
-                    <div style="margin-top: 0.5rem; color: var(--text-secondary);">
-                        ${skillNames.join(', ')}
-                    </div>
-                </div>
-            `;
-        } else {
-            addContainer.innerHTML = '';
-        }
-
-        // Skills to remove
-        if (skillsToRemove.length > 0) {
-            const skillNames = skillsToRemove.map(id => {
-                const checkbox = document.querySelector(`input[name="skills"][value="${id}"]`);
-                return checkbox.dataset.skillName;
-            });
-            removeContainer.innerHTML = `
-                <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 6px; border: 1px solid var(--accent-danger);">
-                    <strong style="color: var(--accent-danger);">
-                        <i class="fas fa-minus-circle"></i> Removing ${skillsToRemove.length} skill(s):
-                    </strong>
-                    <div style="margin-top: 0.5rem; color: var(--text-secondary);">
-                        ${skillNames.join(', ')}
-                    </div>
-                </div>
-            `;
-        } else {
-            removeContainer.innerHTML = '';
-        }
-    }
-
-    // Add event listeners to skill checkboxes
-    document.querySelectorAll('input[name="skills"]').forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            updateAvailableRoles();
-            updateChangesPreview();
-        });
-    });
 
     // Hover effect for skill options
     document.querySelectorAll('.skill-option').forEach(label => {
         label.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-            this.style.boxShadow = '0 4px 12px rgba(0, 217, 255, 0.15)';
+            if (this.querySelector('input[name="skills"]').checked) {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.3)';
+            } else {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 12px rgba(0, 217, 255, 0.15)';
+            }
         });
         label.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0)';
@@ -357,20 +378,12 @@
         });
     });
 
-    // Form submission
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const submitBtn = this.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="loading"></span> Saving Changes...';
-    });
-
-    // Phone number validation - only allow digits
+    // Phone number validation
     document.getElementById('phone_no').addEventListener('input', function(e) {
         this.value = this.value.replace(/\D/g, '').slice(0, 10);
     });
 
-    // Initialize on page load
+    // Initialize
     updateAvailableRoles();
-    updateChangesPreview();
 </script>
 {% endblock %}

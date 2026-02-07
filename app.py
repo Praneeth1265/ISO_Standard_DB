@@ -436,11 +436,10 @@ def list_members():
     connection.close()
     
     return render_template('members/list.html', members=members)
-
 @app.route('/members/add', methods=['GET', 'POST'])
 @handle_db_error
 def add_member():
-    """Add a new team member with skills (triggers after_member_insert)"""
+    """Add a new team member with skills and proficiency (triggers after_member_insert)"""
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     
@@ -455,7 +454,7 @@ def add_member():
             email = data.get('email', '').strip()
             phone_no = data.get('phone_no', '').strip()
             role_id = data.get('role_id')
-            skill_ids = data.get('skills', [])
+            skills_data = data.get('skills', [])  # Now contains {skill_id, proficiency}
             
             # Validate role_id is provided
             if not role_id or role_id == '' or role_id == 'null':
@@ -494,12 +493,14 @@ def add_member():
                 
                 mem_id = cursor.lastrowid
                 
-                # Add skills with default proficiency level 1
-                for skill_id in skill_ids:
+                # Add skills with their proficiency levels
+                for skill_data in skills_data:
+                    skill_id = skill_data.get('skill_id')
+                    proficiency = skill_data.get('proficiency', 3)  # Default to 3 if not provided
                     cursor.execute("""
                         INSERT INTO mem_skills (mem_id, skill_id, proficiency_level) 
-                        VALUES (%s, %s, 1)
-                    """, (mem_id, skill_id))
+                        VALUES (%s, %s, %s)
+                    """, (mem_id, skill_id, proficiency))
                 
                 connection.commit()
                 
@@ -565,6 +566,17 @@ def add_member():
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (first_name, middle_name, last_name, email, phone_no, role_id))
             
+            mem_id = cursor.lastrowid
+            
+            # Handle skills with proficiency from form
+            selected_skills = request.form.getlist('skills')
+            for skill_id in selected_skills:
+                proficiency = request.form.get(f'proficiency_{skill_id}', 3)
+                cursor.execute("""
+                    INSERT INTO mem_skills (mem_id, skill_id, proficiency_level) 
+                    VALUES (%s, %s, %s)
+                """, (mem_id, skill_id, proficiency))
+            
             connection.commit()
             cursor.close()
             connection.close()
@@ -621,6 +633,7 @@ def add_member():
                          all_skills=all_skills,
                          all_roles_json=all_roles_json,
                          role_requirements_json=role_requirements_json)
+
 
 @app.route('/members/<int:mem_id>')
 @handle_db_error
@@ -695,7 +708,7 @@ def view_member(mem_id):
 @app.route('/members/<int:mem_id>/edit', methods=['GET', 'POST'])
 @handle_db_error
 def edit_member(mem_id):
-    """Edit team member details with skill management (triggers after_member_update and validate_role_eligibility)"""
+    """Edit team member details with skill management and proficiency (triggers after_member_update and validate_role_eligibility)"""
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     
@@ -710,6 +723,12 @@ def edit_member(mem_id):
         # Get selected skills from form
         selected_skills = request.form.getlist('skills')
         selected_skills = [int(s) for s in selected_skills]
+        
+        # Get proficiency levels for each skill
+        skill_proficiencies = {}
+        for skill_id in selected_skills:
+            prof_value = request.form.get(f'proficiency_{skill_id}', 3)
+            skill_proficiencies[skill_id] = int(prof_value)
         
         # Validate role_id is provided
         if not role_id or role_id == '':
@@ -751,14 +770,16 @@ def edit_member(mem_id):
             return redirect(url_for('edit_member', mem_id=mem_id))
         
         try:
-            # Get current skills for comparison
-            cursor.execute("SELECT skill_id FROM mem_skills WHERE mem_id = %s", (mem_id,))
-            current_skills = set(row['skill_id'] for row in cursor.fetchall())
+            # Get current skills with proficiency for comparison
+            cursor.execute("SELECT skill_id, proficiency_level FROM mem_skills WHERE mem_id = %s", (mem_id,))
+            current_skills_data = {row['skill_id']: row['proficiency_level'] for row in cursor.fetchall()}
+            current_skills = set(current_skills_data.keys())
             new_skills = set(selected_skills)
             
             # Calculate changes
             skills_to_add = new_skills - current_skills
             skills_to_remove = current_skills - new_skills
+            skills_to_update = new_skills & current_skills  # Skills that exist in both
             
             # This UPDATE will trigger validate_role_eligibility and after_member_update
             cursor.execute("""
@@ -768,12 +789,24 @@ def edit_member(mem_id):
                 WHERE mem_id = %s
             """, (first_name, middle_name, last_name, email, phone_no, role_id, mem_id))
             
-            # Add new skills with default proficiency level 1
+            # Add new skills with their proficiency levels
             for skill_id in skills_to_add:
+                proficiency = skill_proficiencies.get(skill_id, 3)
                 cursor.execute("""
                     INSERT INTO mem_skills (mem_id, skill_id, proficiency_level) 
-                    VALUES (%s, %s, 1)
-                """, (mem_id, skill_id))
+                    VALUES (%s, %s, %s)
+                """, (mem_id, skill_id, proficiency))
+            
+            # Update proficiency for existing skills (only if changed)
+            for skill_id in skills_to_update:
+                new_proficiency = skill_proficiencies.get(skill_id, 3)
+                old_proficiency = current_skills_data.get(skill_id)
+                if new_proficiency != old_proficiency:
+                    cursor.execute("""
+                        UPDATE mem_skills 
+                        SET proficiency_level = %s 
+                        WHERE mem_id = %s AND skill_id = %s
+                    """, (new_proficiency, mem_id, skill_id))
             
             # Remove deselected skills
             for skill_id in skills_to_remove:
@@ -807,7 +840,7 @@ def edit_member(mem_id):
         cursor.close()
         connection.close()
         
-        return redirect(url_for('view_member', mem_id=mem_id))
+        return redirect(url_for('list_members'))
     
     # GET request
     cursor.execute("""
@@ -833,13 +866,15 @@ def edit_member(mem_id):
     """)
     all_skills = cursor.fetchall()
     
-    # Get member's current skills
+    # Get member's current skills WITH proficiency levels
     cursor.execute("""
-        SELECT skill_id 
+        SELECT skill_id, proficiency_level 
         FROM mem_skills 
         WHERE mem_id = %s
     """, (mem_id,))
-    member_skill_ids = [row['skill_id'] for row in cursor.fetchall()]
+    member_skills_data = cursor.fetchall()
+    member_skill_ids = [row['skill_id'] for row in member_skills_data]
+    member_skill_proficiencies = {row['skill_id']: row['proficiency_level'] for row in member_skills_data}
     
     # Get all roles for dropdown
     cursor.execute("""
@@ -878,11 +913,13 @@ def edit_member(mem_id):
     import json
     all_roles_json = json.dumps(all_roles)
     role_requirements_json = json.dumps(role_requirements)
+    member_skill_proficiencies_json = json.dumps(member_skill_proficiencies)
     
     return render_template('members/edit.html', 
                          member=member,
                          all_skills=all_skills,
                          member_skill_ids=member_skill_ids,
+                         member_skill_proficiencies=member_skill_proficiencies_json,
                          all_roles=all_roles,
                          all_roles_json=all_roles_json,
                          role_requirements_json=role_requirements_json)

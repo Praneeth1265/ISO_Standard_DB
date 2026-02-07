@@ -53,26 +53,6 @@
             <i class="fas fa-arrow-right"></i> View All Skills
         </a>
     </div>
-
-    <!-- Total Assignments -->
-    <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-                <p style="color: var(--text-secondary); font-size: 1.1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
-                    Skill Assignments
-                </p>
-                <h2 style="font-size: 2.5rem; font-weight: 700; color: var(--accent-success); font-family: 'JetBrains Mono', monospace;">
-                    {{ stats.total_assignments }}
-                </h2>
-            </div>
-            <div style="width: 60px; height: 60px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-success);">
-                <i class="fas fa-link" style="font-size: 1.75rem; color: var(--accent-success);"></i>
-            </div>
-        </div>
-        <a href="{{ url_for('user_skills_report') }}" class="btn btn-secondary" style="margin-top: 1.5rem; width: 100%; justify-content: center;">
-            <i class="fas fa-arrow-right"></i> View Reports
-        </a>
-    </div>
 </div>
 
 <!-- Quick Actions -->

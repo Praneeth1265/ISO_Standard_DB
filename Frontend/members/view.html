@@ -3,165 +3,163 @@
 {% block title %}{{ member.full_name }} - Team Skills Manager{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 2rem;">
-    <a href="/members" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
-        <i class="fas fa-arrow-left"></i> Back to Members
-    </a>
-</div>
+<div style="max-width: 1400px; margin: 0 auto;">
+    <div style="margin-bottom: 2rem;">
+        <a href="/members" style="color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; transition: color 0.3s;">
+            <i class="fas fa-arrow-left"></i> Back to Members
+        </a>
+    </div>
 
-<!-- Member Header -->
-<div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05));">
-    <div style="display: flex; align-items: flex-start; gap: 2rem; flex-wrap: wrap;">
-        <!-- Avatar -->
-        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; color: white; flex-shrink: 0; box-shadow: var(--shadow-lg);">
-            {{ member.full_name[0] }}
-        </div>
-        
-        <div style="flex: 1; min-width: 0;">
-            <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">
-                {{ member.full_name }}
-            </h1>
-            <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1rem;">
-                {{ member.role }}
-            </p>
-            <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-muted);">
-                <i class="fas fa-envelope"></i>
-                <a href="mailto:{{ member.email }}" style="color: var(--accent-primary); text-decoration: none;">
-                    {{ member.email }}
+    <!-- Member Header -->
+    <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(124, 58, 237, 0.05));">
+        <div style="display: flex; align-items: flex-start; gap: 2rem; flex-wrap: wrap;">
+            <!-- Avatar -->
+            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; color: white; flex-shrink: 0; box-shadow: var(--shadow-lg);">
+                {{ member.full_name[0] }}
+            </div>
+            
+            <div style="flex: 1; min-width: 0;">
+                <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">
+                    {{ member.full_name }}
+                </h1>
+                <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-briefcase"></i>
+                    {{ member.role_name }}
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; color: var(--text-muted);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-envelope"></i>
+                        <a href="mailto:{{ member.email }}" style="color: var(--accent-primary); text-decoration: none;">
+                            {{ member.email }}
+                        </a>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-phone"></i>
+                        <span>{{ member.phone_no }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="/members/{{ member.mem_id }}/edit" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Profile
                 </a>
+                <button onclick="confirmDelete()" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
             </div>
         </div>
-
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <a href="/members/{{ member.mem_id }}/edit" class="btn btn-secondary">
-                <i class="fas fa-edit"></i> Edit Profile
-            </a>
-            <button onclick="confirmDelete()" class="btn btn-danger">
-                <i class="fas fa-trash"></i> Delete
-            </button>
-        </div>
     </div>
-</div>
 
-<!-- Skills Section -->
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-    <!-- Current Skills -->
-    <div class="card">
-        <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-            <i class="fas fa-lightbulb" style="color: var(--accent-warning);"></i>
-            Skills ({{ skills|length }})
-        </h2>
+    <!-- Two Column Layout: Skills (Left) | Eligibility (Right) -->
+    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem;">
+        
+        <!-- Left Column: Skills -->
+        <div class="card">
+            <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-certificate" style="color: var(--accent-warning);"></i>
+                Skills & Proficiency ({{ skills|length }})
+            </h2>
 
-        {% if skills %}
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-            {% for skill in skills %}
-            <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; transition: all 0.3s ease;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                    <div style="flex: 1;">
-                        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">
-                            {{ skill.skill_name }}
-                        </h3>
-                        <span class="badge {% if skill.category == 'Technical' %}badge-primary{% elif skill.category == 'Clinical' %}badge-success{% elif skill.category == 'Regulatory' %}badge-warning{% else %}badge-secondary{% endif %}">
-                            {{ skill.category }}
-                        </span>
-                    </div>
-                    <form method="POST" action="/members/{{ member.mem_id }}/skills/{{ skill.skill_id }}/delete" style="display: inline;">
-                        <button type="submit" class="btn btn-danger" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;" onclick="return confirm('Remove this skill?')">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Proficiency Level -->
-                <form method="POST" action="/members/{{ member.mem_id }}/skills/{{ skill.skill_id }}/update">
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <label style="color: var(--text-secondary); font-size: 0.9rem; white-space: nowrap;">
-                            Proficiency:
-                        </label>
-                        <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
-                            <input 
-                                type="range" 
-                                name="proficiency_level" 
-                                min="1" 
-                                max="5" 
-                                value="{{ skill.proficiency_level }}" 
-                                style="flex: 1; accent-color: var(--accent-primary);"
-                                oninput="this.nextElementSibling.textContent = this.value; this.form.querySelector('button').disabled = false;"
-                            >
-                            <span style="font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-primary); min-width: 30px; text-align: center; font-size: 1.1rem;">
-                                {{ skill.proficiency_level }}
+            {% if skills %}
+            <div style="display: grid; gap: 0.75rem;">
+                {% for skill in skills %}
+                <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <div style="flex: 1;">
+                            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem;">
+                                {{ skill.skill_name }}
+                            </h3>
+                            <span class="badge {% if skill.category == 'Technical' %}badge-primary{% elif skill.category == 'Clinical' %}badge-success{% elif skill.category == 'Regulatory' %}badge-warning{% else %}badge-secondary{% endif %}" style="font-size: 0.75rem;">
+                                {{ skill.category }}
                             </span>
                         </div>
-                        <button type="submit" class="btn btn-success" style="padding: 0.5rem 1rem; font-size: 0.85rem;" disabled>
-                            <i class="fas fa-check"></i> Save
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-primary); font-size: 1.1rem;">
+                                {% if skill.proficiency_level == 1 %}Beginner{% elif skill.proficiency_level == 2 %}Intermediate{% else %}Advanced{% endif %}
+                            </span>
+                        </div>
                     </div>
-                </form>
 
-                <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
-                    <i class="fas fa-clock"></i> Updated: {{ skill.updated_at.strftime('%Y-%m-%d') }}
+                    <!-- Compact Proficiency Bar -->
+                    <div style="width: 100%; height: 6px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem;">
+                        <div style="width: {{ (skill.proficiency_level / 3) * 100 }}%; height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); transition: width 0.3s ease;"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+                        <span>Beginner</span>
+                        <span style="display: flex; align-items: center; gap: 0.25rem;">
+                            <i class="fas fa-clock"></i>
+                            {{ skill.updated_at.strftime('%b %d, %Y') }}
+                        </span>
+                        <span>Advanced</span>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+            {% else %}
+            <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                <i class="fas fa-certificate" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                <p>No skills assigned yet</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">Click "Edit Profile" to add skills</p>
+            </div>
+            {% endif %}
         </div>
-        {% else %}
-        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-            <i class="fas fa-lightbulb" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
-            <p>No skills assigned yet</p>
-        </div>
-        {% endif %}
-    </div>
 
-    <!-- Add New Skill -->
-    <div class="card" style="height: fit-content; position: sticky; top: 100px;">
-        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-            <i class="fas fa-plus-circle" style="color: var(--accent-success);"></i>
-            Add Skill
-        </h3>
+        <!-- Right Column: Eligibility -->
+        <div>
 
-        {% if available_skills %}
-        <form method="POST" action="/members/{{ member.mem_id }}/skills/add">
-            <div class="form-group">
-                <label for="skill_id" class="form-label">Select Skill</label>
-                <select name="skill_id" id="skill_id" class="form-control" required>
-                    <option value="">Choose a skill...</option>
-                    {% for skill in available_skills %}
-                    <option value="{{ skill.skill_id }}">{{ skill.skill_name }} ({{ skill.category }})</option>
+            <!-- Eligible Roles -->
+            {% if eligible_roles and eligible_roles|length > 0 %}
+            <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02)); border-color: rgba(16, 185, 129, 0.3);">
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-check-circle" style="color: var(--accent-success);"></i>
+                    Eligible Roles
+                </h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    {% for role in eligible_roles %}
+                    <div style="padding: 0.75rem 1rem; background: var(--bg-primary); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; transition: all 0.2s;"
+                         onmouseover="this.style.transform='translateX(4px)'; this.style.borderColor='rgba(16, 185, 129, 0.6)';"
+                         onmouseout="this.style.transform='translateX(0)'; this.style.borderColor='rgba(16, 185, 129, 0.3)';">
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ role.role_name }}</div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="flex: 1; height: 4px; background: var(--bg-secondary); border-radius: 2px; overflow: hidden;">
+                                {# Safely calculate percentage - handle any field name variations #}
+                                {% if role.skills_met is defined %}
+                                    {% set met = role.skills_met %}
+                                {% else %}
+                                    {% set met = 0 %}
+                                {% endif %}
+                                
+                                {% if role.total_requirements is defined %}
+                                    {% set total = role.total_requirements %}
+                                {% elif role.skills_required is defined %}
+                                    {% set total = role.skills_required %}
+                                {% elif role.required_skills is defined %}
+                                    {% set total = role.required_skills %}
+                                {% else %}
+                                    {% set total = 1 %}
+                                {% endif %}
+                                
+                                <div style="width: {{ (met / total * 100) if total > 0 else 100 }}%; height: 100%; background: linear-gradient(90deg, #10b981, #059669);"></div>
+                            </div>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; font-family: 'JetBrains Mono', monospace;">
+                                {{ met }}/{{ total }}
+                            </span>
+                        </div>
+                    </div>
                     {% endfor %}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="proficiency_level" class="form-label">
-                    Proficiency Level: <span id="proficiency_display" style="color: var(--accent-primary); font-weight: 700; font-family: 'JetBrains Mono', monospace;">5</span>
-                </label>
-                <input 
-                    type="range" 
-                    name="proficiency_level" 
-                    id="proficiency_level" 
-                    min="1" 
-                    max="5" 
-                    value="3" 
-                    class="form-control"
-                    style="accent-color: var(--accent-primary);"
-                    oninput="document.getElementById('proficiency_display').textContent = this.value"
-                >
-                <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
-                    <span>Beginner</span>
-                    <span>Expert</span>
                 </div>
             </div>
+            {% else %}
+            <div class="card" style="text-align: center; padding: 2rem 1rem; background: rgba(100, 116, 139, 0.05);">
+                <i class="fas fa-info-circle" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.75rem; opacity: 0.5;"></i>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">No additional eligible roles at this time</p>
+            </div>
+            {% endif %}
 
-            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
-                <i class="fas fa-plus"></i> Add Skill
-            </button>
-        </form>
-        {% else %}
-        <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
-            <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--accent-success); margin-bottom: 0.75rem;"></i>
-            <p>All available skills assigned!</p>
         </div>
-        {% endif %}
     </div>
 </div>
 
