@@ -5,73 +5,223 @@
 {% block extra_css %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
+    /* Modern Professional Dark Theme */
+    :root {
+        --report-bg-elevated: #1a1f2e;
+        --report-bg-card: #0f1419;
+        --report-border: #2d3748;
+        --report-text-primary: #e2e8f0;
+        --report-text-secondary: #94a3b8;
+        --report-text-muted: #64748b;
+        --report-accent-blue: #3b82f6;
+        --report-accent-cyan: #06b6d4;
+        --report-accent-green: #10b981;
+        --report-accent-amber: #f59e0b;
+        --report-accent-red: #ef4444;
+        --report-hover-bg: rgba(59, 130, 246, 0.08);
+    }
+
     .metric-card { 
-        border-left: 4px solid var(--accent-primary); 
-        transition: transform 0.2s;
+        background: var(--report-bg-elevated);
+        border: 1px solid var(--report-border);
+        border-left: 3px solid var(--report-accent-cyan);
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
     .metric-card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
+        border-left-color: var(--report-accent-blue);
     }
     
     /* Heatmap Styles */
     .matrix-cell { 
         text-align: center; 
-        font-weight: bold; 
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        min-width: 80px;
+        font-weight: 600; 
+        padding: 0.875rem;
+        border: 1px solid var(--report-border);
+        min-width: 85px;
+        transition: all 0.2s;
+    }
+    
+    .matrix-cell:hover {
+        transform: scale(1.05);
+        z-index: 10;
     }
     
     .lvl-0 { 
-        background: rgba(255,255,255,0.02); 
-        color: var(--text-muted);
+        background: var(--report-bg-card); 
+        color: var(--report-text-muted);
     }
     .lvl-1 { 
-        background: rgba(245, 158, 11, 0.2); 
-        color: #fbbf24; 
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.15)); 
+        color: #fbbf24;
+        border-color: rgba(245, 158, 11, 0.3);
     }
     .lvl-2 { 
-        background: rgba(59, 130, 246, 0.2); 
-        color: #60a5fa; 
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(59, 130, 246, 0.15)); 
+        color: #60a5fa;
+        border-color: rgba(59, 130, 246, 0.3);
     }
     .lvl-3 { 
-        background: rgba(16, 185, 129, 0.2); 
-        color: #34d399; 
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.15)); 
+        color: #34d399;
+        border-color: rgba(16, 185, 129, 0.3);
     }
     
-    /* Clickable elements */
-    .clickable-card {
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .clickable-card:hover {
-        transform: scale(1.01);
-        box-shadow: 0 8px 16px rgba(0, 217, 255, 0.2);
-    }
-    
-    /* Modal custom styles */
-    .modal-content {
-        background: var(--bg-primary);
-        color: var(--text-primary);
-        border: 1px solid var(--border-color);
+    /* Expandable Sections */
+    .expandable-section {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out;
+        opacity: 0;
+        padding: 0;
     }
     
-    .modal-header {
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .modal-footer {
-        border-top: 1px solid var(--border-color);
-    }
-    
-    /* Fix close button visibility in dark theme */
-    .btn-close {
-        filter: invert(1);
-        opacity: 0.8;
-    }
-    
-    .btn-close:hover {
+    .expandable-section.active {
+        max-height: 2000px;
         opacity: 1;
+        padding: 1.5rem;
+    }
+    
+    /* Category Buttons */
+    .category-btn {
+        background: var(--report-bg-elevated);
+        border: 1px solid var(--report-border);
+        color: var(--report-text-primary);
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    
+    .category-btn:hover {
+        background: var(--report-hover-bg);
+        border-color: var(--report-accent-blue);
+        color: var(--report-accent-cyan);
+        transform: translateY(-2px);
+    }
+    
+    .category-btn.active {
+        background: linear-gradient(135deg, var(--report-accent-blue), var(--report-accent-cyan));
+        border-color: var(--report-accent-cyan);
+        color: white;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Risk Alert */
+    .risk-alert {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08));
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .risk-alert:hover {
+        border-color: rgba(239, 68, 68, 0.6);
+        box-shadow: 0 6px 16px rgba(239, 68, 68, 0.2);
+    }
+    
+    /* Modern Card Styling */
+    .report-card {
+        background: var(--report-bg-elevated);
+        border: 1px solid var(--report-border);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .report-card:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* Badge Styles */
+    .badge-modern {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 1px solid;
+    }
+    
+    .badge-success {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+        color: #34d399;
+        border-color: rgba(16, 185, 129, 0.4);
+    }
+    
+    .badge-warning {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+        color: #fbbf24;
+        border-color: rgba(245, 158, 11, 0.4);
+    }
+    
+    .badge-danger {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+        color: #f87171;
+        border-color: rgba(239, 68, 68, 0.4);
+    }
+    
+    .badge-info {
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(6, 182, 212, 0.1));
+        color: #22d3ee;
+        border-color: rgba(6, 182, 212, 0.4);
+    }
+    
+    /* Toggle Button */
+    .toggle-btn {
+        background: var(--report-bg-elevated);
+        border: 1px solid var(--report-border);
+        color: var(--report-text-primary);
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .toggle-btn:hover {
+        background: var(--report-hover-bg);
+        border-color: var(--report-accent-blue);
+        color: var(--report-accent-cyan);
+    }
+    
+    .toggle-btn.active {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.1));
+        border-color: var(--report-accent-red);
+        color: var(--report-accent-red);
+    }
+    
+    .toggle-icon {
+        transition: transform 0.3s ease;
+    }
+    
+    .toggle-btn.active .toggle-icon {
+        transform: rotate(180deg);
+    }
+    
+    /* Custom Scrollbar for Matrix */
+    .matrix-scroll::-webkit-scrollbar {
+        height: 10px;
+    }
+    
+    .matrix-scroll::-webkit-scrollbar-track {
+        background: var(--report-bg-card);
+        border-radius: 5px;
+    }
+    
+    .matrix-scroll::-webkit-scrollbar-thumb {
+        background: var(--report-border);
+        border-radius: 5px;
+    }
+    
+    .matrix-scroll::-webkit-scrollbar-thumb:hover {
+        background: var(--report-accent-cyan);
     }
 </style>
 {% endblock %}
@@ -79,191 +229,213 @@
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 250px;">
-        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
-            <i class="fas fa-chart-bar"></i> Team Skills Reports
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--report-text-primary);">
+            <i class="fas fa-chart-line" style="color: var(--report-accent-cyan);"></i> Team Skills Reports
         </h1>
-        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+        <p style="color: var(--report-text-secondary); font-size: 1.1rem;">
             Analytics and insights about your team's skills
         </p>
     </div>
-    <button onclick="exportToCSV()" class="btn btn-primary" style="margin-top: 0.5rem; white-space: nowrap;">
+    <button onclick="exportToCSV()" class="btn btn-primary" style="margin-top: 0.5rem; white-space: nowrap; background: linear-gradient(135deg, var(--report-accent-blue), var(--report-accent-cyan)); border: none; padding: 0.75rem 1.5rem; font-weight: 600;">
         <i class="fas fa-download"></i> Export to CSV
     </button>
 </div>
 
 <!-- KPI Cards -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-    <div class="card metric-card" style="padding: 1.5rem;">
-        <h6 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 0.5rem;">Total Staff</h6>
-        <h2 style="font-size: 2.5rem; font-weight: 700; margin: 0;">{{ total_staff }}</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="metric-card" style="padding: 1.75rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <h6 style="color: var(--report-text-muted); text-transform: uppercase; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px;">Total Staff</h6>
+            <i class="fas fa-users" style="color: var(--report-accent-cyan); font-size: 1.5rem; opacity: 0.5;"></i>
+        </div>
+        <h2 style="font-size: 2.75rem; font-weight: 700; margin: 0; color: var(--report-text-primary);">{{ total_staff }}</h2>
     </div>
-    <div class="card metric-card" style="padding: 1.5rem; border-left-color: var(--accent-success);">
-        <h6 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 0.5rem;">Compliance Rate</h6>
-        <h2 style="font-size: 2.5rem; font-weight: 700; margin: 0; color: var(--accent-success);">{{ compliance_rate }}%</h2>
+    <div class="metric-card" style="padding: 1.75rem; border-left-color: var(--report-accent-green);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <h6 style="color: var(--report-text-muted); text-transform: uppercase; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px;">Compliance Rate</h6>
+            <i class="fas fa-check-circle" style="color: var(--report-accent-green); font-size: 1.5rem; opacity: 0.5;"></i>
+        </div>
+        <h2 style="font-size: 2.75rem; font-weight: 700; margin: 0; color: var(--report-accent-green);">{{ compliance_rate }}%</h2>
     </div>
-    <div class="card metric-card" style="padding: 1.5rem; border-left-color: var(--accent-danger);">
-        <h6 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 0.5rem;">Critical Gaps</h6>
-        <h2 style="font-size: 2.5rem; font-weight: 700; margin: 0; color: var(--accent-danger);">{{ critical_gaps }}</h2>
+    <div class="metric-card" style="padding: 1.75rem; border-left-color: var(--report-accent-red);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <h6 style="color: var(--report-text-muted); text-transform: uppercase; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px;">Critical Gaps</h6>
+            <i class="fas fa-exclamation-triangle" style="color: var(--report-accent-red); font-size: 1.5rem; opacity: 0.5;"></i>
+        </div>
+        <h2 style="font-size: 2.75rem; font-weight: 700; margin: 0; color: var(--report-accent-red);">{{ critical_gaps }}</h2>
     </div>
-    <div class="card metric-card" style="padding: 1.5rem; border-left-color: var(--accent-warning);">
-        <h6 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 0.5rem;">Skills at Risk</h6>
-        <h2 style="font-size: 2.5rem; font-weight: 700; margin: 0; color: var(--accent-warning);">{{ skills_at_risk }}</h2>
+    <div class="metric-card" style="padding: 1.75rem; border-left-color: var(--report-accent-amber);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <h6 style="color: var(--report-text-muted); text-transform: uppercase; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px;">Skills at Risk</h6>
+            <i class="fas fa-shield-alt" style="color: var(--report-accent-amber); font-size: 1.5rem; opacity: 0.5;"></i>
+        </div>
+        <h2 style="font-size: 2.75rem; font-weight: 700; margin: 0; color: var(--report-accent-amber);">{{ skills_at_risk }}</h2>
     </div>
 </div>
 
 <!-- Charts Row -->
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+<div style="margin-bottom: 2rem;">
     <!-- Stacked Bar Chart -->
-    <div class="card">
-        <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0;">
-                <i class="fas fa-chart-bar" style="color: var(--accent-primary);"></i>
+    <div class="report-card">
+        <div style="padding: 1.75rem; border-bottom: 1px solid var(--report-border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--report-text-primary);">
+                <i class="fas fa-chart-bar" style="color: var(--report-accent-cyan); margin-right: 0.5rem;"></i>
                 Talent Depth by Category
             </h3>
-            <div style="display: flex; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.625rem; flex-wrap: wrap;">
                 {% for cat in ['Technical', 'Clinical', 'Regulatory', 'Soft Skill'] %}
-                <button class="btn btn-sm" style="background: rgba(0, 217, 255, 0.1); border: 1px solid var(--border-color);" 
-                        data-bs-toggle="modal" data-bs-target="#catModal{{ cat|replace(' ', '') }}">
+                <button class="category-btn" onclick="toggleCategory('{{ cat|replace(' ', '') }}')">
                     {{ cat }}
                 </button>
                 {% endfor %}
             </div>
         </div>
-        <div style="padding: 1.5rem;">
-            <div style="height: 300px;">
+        <div style="padding: 1.75rem;">
+            <div style="height: 320px;">
                 <canvas id="stackedBarChart"></canvas>
             </div>
         </div>
-    </div>
-
-    <!-- Role Health Leaderboard -->
-    <div class="card">
-        <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color);">
-            <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0;">
-                <i class="fas fa-heartbeat" style="color: var(--accent-success);"></i>
-                Role Health
-            </h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.5rem 0 0 0;">Top concerns</p>
+        
+        <!-- Category Details (Expandable) -->
+        {% for cat, data in category_data.items() %}
+        <div id="category{{ cat|replace(' ', '') }}" class="expandable-section" style="background: var(--report-bg-card); border-top: 1px solid var(--report-border); border-radius: 0 0 12px 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div>
+                    <h6 style="text-transform: uppercase; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; margin-bottom: 1rem; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-trophy" style="color: var(--report-accent-amber);"></i>
+                        TOP {{ cat|upper }} EXPERTS
+                    </h6>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        {% for expert in data.top_experts %}
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--report-bg-elevated); border: 1px solid var(--report-border); border-radius: 8px;">
+                            <span style="font-weight: 600; color: var(--report-text-primary);">{{ expert.name }}</span>
+                            <span class="badge-success" style="padding: 0.375rem 0.75rem;">
+                                Avg {{ expert.avg }}/3
+                            </span>
+                        </div>
+                        {% else %}
+                        <p style="color: var(--report-text-muted); text-align: center; padding: 2rem;">No experts recorded.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div>
+                    <h6 style="text-transform: uppercase; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; margin-bottom: 1rem; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-certificate" style="color: var(--report-accent-blue);"></i>
+                        AVAILABLE CAPABILITIES
+                    </h6>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.625rem;">
+                        {% for skill in data.skills %}
+                        <span style="padding: 0.5rem 1rem; border-radius: 6px; background: var(--report-bg-elevated); border: 1px solid var(--report-border); font-size: 0.875rem; font-weight: 500; color: var(--report-text-primary);">
+                            {{ skill.skill_name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
         </div>
-        <div style="padding: 0;">
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Risk Alert Banner (Expandable) -->
+{% if risk_report %}
+<div class="risk-alert" style="margin-bottom: 2rem;">
+    <div style="padding: 1.5rem; display: flex; align-items: center; gap: 1.5rem; cursor: pointer;" onclick="toggleRisk()">
+        <div style="background: rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 1.125rem; display: flex; align-items: center; justify-content: center; min-width: 60px; height: 60px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--report-accent-red);"></i>
+        </div>
+        <div style="flex: 1;">
+            <h5 style="font-weight: 700; margin-bottom: 0.5rem; color: var(--report-accent-red); font-size: 1.25rem;">
+                Critical Resource Risk ("Bus Factor")
+            </h5>
+            <p style="margin: 0; color: var(--report-text-primary);">
+                Detected <strong>{{ risk_report|length }} skills</strong> held by fewer than 2 employees.
+            </p>
+        </div>
+        <button class="toggle-btn" id="riskToggleBtn">
+            <span>View Report</span>
+            <i class="fas fa-chevron-down toggle-icon"></i>
+        </button>
+    </div>
+    
+    <div id="riskDetails" class="expandable-section" style="background: var(--report-bg-card); border-top: 1px solid rgba(239, 68, 68, 0.4); border-radius: 0 0 12px 12px;">
+        <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <th style="padding: 1rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">Role</th>
-                        <th style="padding: 1rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">Staff</th>
-                        <th style="padding: 1rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">Health</th>
-                        <th style="padding: 1rem;"></th>
+                <thead style="background: var(--report-bg-elevated);">
+                    <tr style="border-bottom: 1px solid var(--report-border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Category</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">At-Risk Skill</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Current Holder(s)</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Bus Factor</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% set ns = namespace(count=0) %}
-                    {% for role_id, role in roles_data.items() %}
-                    {% if role.members and role.members|length > 0 %}
-                    {% set avg_fit = role.members|map(attribute='match_pct')|sum / role.members|length %}
-                    {% if avg_fit < 100 and ns.count < 5 %}
-                    {% set ns.count = ns.count + 1 %}
-                    <tr style="border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s;" 
-                        data-bs-toggle="modal" data-bs-target="#roleModal{{ role_id }}"
-                        onmouseover="this.style.background='rgba(0, 217, 255, 0.05)'"
-                        onmouseout="this.style.background='transparent'">
-                        <td style="padding: 1rem;"><strong>{{ role.name }}</strong></td>
-                        <td style="padding: 1rem;">{{ role.members|length }}</td>
+                    {% for risk in risk_report %}
+                    <tr style="border-bottom: 1px solid var(--report-border);">
                         <td style="padding: 1rem;">
-                            {% if avg_fit >= 80 %}
-                                <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: var(--accent-success); font-weight: 600; font-size: 0.9rem;">
-                                    {{ avg_fit|round|int }}%
-                                </span>
-                            {% elif avg_fit >= 50 %}
-                                <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); font-weight: 600; font-size: 0.9rem;">
-                                    {{ avg_fit|round|int }}%
-                                </span>
+                            <span class="badge-info" style="padding: 0.375rem 0.75rem;">{{ risk.category }}</span>
+                        </td>
+                        <td style="padding: 1rem; font-weight: 700; color: var(--report-accent-red);">
+                            {{ risk.skill_name }}
+                        </td>
+                        <td style="padding: 1rem;">
+                            {% if risk.holders %}
+                                {% for holder in risk.holders %}
+                                    <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3); font-weight: 600; font-size: 0.875rem; margin-right: 0.5rem; display: inline-block;">
+                                        {{ holder }}
+                                    </span>
+                                {% endfor %}
                             {% else %}
-                                <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); font-weight: 600; font-size: 0.9rem;">
-                                    {{ avg_fit|round|int }}%
-                                </span>
+                                <span class="badge-danger">NO ONE (Critical)</span>
                             {% endif %}
                         </td>
-                        <td style="padding: 1rem; color: var(--text-muted);">
-                            <i class="fas fa-chevron-right"></i>
+                        <td style="padding: 1rem;">
+                            {% if risk.count == 0 %}
+                                <span class="badge-danger">0 (Lost)</span>
+                            {% else %}
+                                <span class="badge-warning">1 (High Risk)</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem;">
+                            <a href="/find-experts" class="btn btn-sm" style="background: var(--report-accent-blue); color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-user-plus"></i> Assign Backup
+                            </a>
                         </td>
                     </tr>
-                    {% endif %}
-                    {% endif %}
                     {% endfor %}
-                    {% if ns.count == 0 %}
-                    <tr>
-                        <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">
-                            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--accent-success);"></i>
-                            <p style="margin: 0;">All roles are healthy! (100% compliance)</p>
-                        </td>
-                    </tr>
-                    {% endif %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-
-<!-- Risk Alert Banner -->
-{% if risk_report %}
-<div class="clickable-card" 
-     style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05)); 
-            border: 1px solid rgba(239, 68, 68, 0.3); 
-            border-radius: 8px; 
-            padding: 1.5rem; 
-            margin-bottom: 2rem; 
-            display: flex; 
-            align-items: center; 
-            gap: 1.5rem;"
-     data-bs-toggle="modal" data-bs-target="#riskModal">
-    <div style="background: rgba(239, 68, 68, 0.2); 
-                border-radius: 50%; 
-                padding: 1rem; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center;
-                min-width: 60px;
-                height: 60px;">
-        <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--accent-danger);"></i>
-    </div>
-    <div style="flex: 1;">
-        <h5 style="font-weight: 700; margin-bottom: 0.5rem; color: var(--accent-danger);">
-            Critical Resource Risk ("Bus Factor")
-        </h5>
-        <p style="margin: 0; color: var(--text-primary);">
-            Detected <strong>{{ risk_report|length }} skills</strong> held by fewer than 2 employees. 
-            <span style="text-decoration: underline; font-weight: 600;">Click to view Business Continuity Report.</span>
-        </p>
-    </div>
-    <i class="fas fa-chevron-right" style="font-size: 1.5rem; color: var(--accent-danger);"></i>
-</div>
 {% endif %}
 
 <!-- Master Competency Matrix (Heatmap) -->
-<div class="card" style="margin-bottom: 2rem;">
-    <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0;">
-            <i class="fas fa-th" style="color: var(--accent-primary);"></i>
+<div class="report-card" style="margin-bottom: 2rem;">
+    <div style="padding: 1.75rem; border-bottom: 1px solid var(--report-border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--report-text-primary);">
+            <i class="fas fa-th" style="color: var(--report-accent-cyan); margin-right: 0.5rem;"></i>
             Master Competency Matrix
         </h3>
-        <div style="display: flex; gap: 0.75rem; align-items: center;">
-            <span style="font-size: 0.9rem; color: var(--text-muted);">Legend:</span>
-            <span style="padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 0.85rem; font-weight: 600;">1: Basic</span>
-            <span style="padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; font-size: 0.85rem; font-weight: 600;">2: Intermediate</span>
-            <span style="padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.85rem; font-weight: 600;">3: Advanced</span>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <span style="font-size: 0.8rem; color: var(--report-text-muted); font-weight: 700; text-transform: uppercase;">Legend:</span>
+            <span style="padding: 0.375rem 0.625rem; border-radius: 6px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.15)); color: #fbbf24; font-size: 0.875rem; font-weight: 600; border: 1px solid rgba(245, 158, 11, 0.3);">1: Basic</span>
+            <span style="padding: 0.375rem 0.625rem; border-radius: 6px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(59, 130, 246, 0.15)); color: #60a5fa; font-size: 0.875rem; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.3);">2: Intermediate</span>
+            <span style="padding: 0.375rem 0.625rem; border-radius: 6px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.15)); color: #34d399; font-size: 0.875rem; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.3);">3: Advanced</span>
         </div>
     </div>
     <div style="padding: 0;">
-        <div style="overflow-x: auto;">
+        <div class="matrix-scroll" style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;">
-                <thead style="background: var(--bg-secondary);">
-                    <tr style="border-bottom: 2px solid var(--border-color);">
-                        <th style="padding: 1rem; text-align: left; position: sticky; left: 0; background: var(--bg-secondary); z-index: 10; min-width: 150px;">
+                <thead style="background: var(--report-bg-card);">
+                    <tr style="border-bottom: 2px solid var(--report-border);">
+                        <th style="padding: 1.125rem; text-align: left; position: sticky; left: 0; background: var(--report-bg-card); z-index: 10; min-width: 160px; color: var(--report-text-primary); font-weight: 700;">
                             Employee
                         </th>
-                        <th style="padding: 1rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">Role</th>
+                        <th style="padding: 1.125rem; text-align: left; font-size: 0.8rem; color: var(--report-text-muted); font-weight: 700; text-transform: uppercase;">Role</th>
                         {% for skill in heatmap_skills %}
-                        <th style="padding: 1rem; text-align: center; font-size: 0.85rem; color: var(--text-muted); writing-mode: vertical-rl; transform: rotate(180deg); min-width: 60px;">
+                        <th style="padding: 1.125rem; text-align: center; font-size: 0.8rem; color: var(--report-text-muted); font-weight: 700; writing-mode: vertical-rl; transform: rotate(180deg); min-width: 60px;">
                             <span title="{{ skill.skill_name }}">{{ skill.skill_name }}</span>
                         </th>
                         {% endfor %}
@@ -271,12 +443,12 @@
                 </thead>
                 <tbody>
                     {% for member in heatmap_data %}
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <td style="padding: 1rem; font-weight: 600; position: sticky; left: 0; background: var(--bg-primary); z-index: 5;">
+                    <tr style="border-bottom: 1px solid var(--report-border);">
+                        <td style="padding: 1.125rem; font-weight: 600; position: sticky; left: 0; background: var(--report-bg-elevated); z-index: 5; color: var(--report-text-primary); border-right: 1px solid var(--report-border);">
                             {{ member.name }}
                         </td>
-                        <td style="padding: 1rem;">
-                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(124, 58, 237, 0.15); color: var(--accent-secondary); font-weight: 600; font-size: 0.85rem; white-space: nowrap;">
+                        <td style="padding: 1.125rem;">
+                            <span style="padding: 0.5rem 1rem; border-radius: 6px; background: rgba(124, 58, 237, 0.2); color: #a78bfa; border: 1px solid rgba(124, 58, 237, 0.4); font-weight: 600; font-size: 0.875rem; white-space: nowrap;">
                                 {{ member.role }}
                             </span>
                         </td>
@@ -299,44 +471,38 @@
 
 <!-- Original Reports Tables (kept for export functionality) -->
 <!-- Skills by Category -->
-<div class="card" style="margin-bottom: 2rem;">
-    <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color);">
-        <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.75rem;">
-            <i class="fas fa-chart-pie" style="color: var(--accent-primary);"></i>
+<div class="report-card" style="margin-bottom: 2rem;">
+    <div style="padding: 1.75rem; border-bottom: 1px solid var(--report-border);">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--report-text-primary); display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-chart-pie" style="color: var(--report-accent-cyan);"></i>
             Skills Distribution by Category
         </h3>
     </div>
-    <div style="padding: 1.5rem;">
+    <div style="padding: 1.75rem;">
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;" id="categoryTable">
-                <thead>
-                    <tr style="border-bottom: 2px solid var(--border-color);">
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Category</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Total Skills</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Members with Skills</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Distribution</th>
+                <thead style="background: var(--report-bg-card);">
+                    <tr style="border-bottom: 2px solid var(--report-border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Category</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Total Skills</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Members with Skills</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Distribution</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for stat in category_stats %}
-                    <tr style="border-bottom: 1px solid var(--border-color);">
+                    <tr style="border-bottom: 1px solid var(--report-border);">
                         <td style="padding: 1rem;">
-                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; 
-                                background: {% if stat.category == 'Technical' %}rgba(0, 217, 255, 0.15); color: var(--accent-primary)
-                                {% elif stat.category == 'Clinical' %}rgba(16, 185, 129, 0.15); color: var(--accent-success)
-                                {% elif stat.category == 'Soft Skill' %}rgba(124, 58, 237, 0.15); color: var(--accent-secondary)
-                                {% else %}rgba(245, 158, 11, 0.15); color: var(--accent-warning){% endif %};">
-                                {{ stat.category }}
-                            </span>
+                            <span class="badge-info" style="padding: 0.5rem 1rem;">{{ stat.category }}</span>
                         </td>
-                        <td style="padding: 1rem;"><strong>{{ stat.skill_count }}</strong></td>
-                        <td style="padding: 1rem;">{{ stat.members_with_skills }}</td>
+                        <td style="padding: 1rem; color: var(--report-text-primary); font-weight: 600;"><strong>{{ stat.skill_count }}</strong></td>
+                        <td style="padding: 1rem; color: var(--report-text-primary); font-weight: 600;">{{ stat.members_with_skills }}</td>
                         <td style="padding: 1rem;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div style="flex: 1; max-width: 200px; height: 25px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--border-color);">
-                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-success)); width: {{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}%;"></div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="flex: 1; max-width: 220px; height: 28px; background: var(--report-bg-card); border-radius: 6px; overflow: hidden; position: relative; border: 1px solid var(--report-border);">
+                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--report-accent-cyan), var(--report-accent-blue)); width: {{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}%;"></div>
                                 </div>
-                                <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary); white-space: nowrap; min-width: 40px;">
+                                <span style="font-weight: 700; font-size: 0.95rem; color: var(--report-text-primary); white-space: nowrap; min-width: 50px;">
                                     {{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}%
                                 </span>
                             </div>
@@ -350,51 +516,43 @@
 </div>
 
 <!-- Top Skills -->
-<div class="card" style="margin-bottom: 2rem;">
-    <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color);">
-        <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.75rem;">
-            <i class="fas fa-trophy" style="color: var(--accent-success);"></i>
+<div class="report-card" style="margin-bottom: 2rem;">
+    <div style="padding: 1.75rem; border-bottom: 1px solid var(--report-border);">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--report-text-primary); display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-trophy" style="color: var(--report-accent-amber);"></i>
             Top 10 Most Common Skills
         </h3>
     </div>
-    <div style="padding: 1.5rem;">
+    <div style="padding: 1.75rem;">
         {% if top_skills %}
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;" id="topSkillsTable">
-                <thead>
-                    <tr style="border-bottom: 2px solid var(--border-color);">
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Rank</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Skill Name</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Category</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Team Members</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Avg Proficiency</th>
+                <thead style="background: var(--report-bg-card);">
+                    <tr style="border-bottom: 2px solid var(--report-border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Rank</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Skill Name</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Category</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Team Members</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Avg Proficiency</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for skill in top_skills %}
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <td style="padding: 1rem;"><strong>{{ loop.index }}</strong></td>
-                        <td style="padding: 1rem;"><strong>{{ skill.skill_name }}</strong></td>
+                    <tr style="border-bottom: 1px solid var(--report-border);">
+                        <td style="padding: 1rem; color: var(--report-text-primary); font-weight: 600;"><strong>{{ loop.index }}</strong></td>
+                        <td style="padding: 1rem; color: var(--report-text-primary); font-weight: 600;"><strong>{{ skill.skill_name }}</strong></td>
                         <td style="padding: 1rem;">
-                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; white-space: nowrap;
-                                background: {% if skill.category == 'Technical' %}rgba(0, 217, 255, 0.15); color: var(--accent-primary)
-                                {% elif skill.category == 'Clinical' %}rgba(16, 185, 129, 0.15); color: var(--accent-success)
-                                {% elif skill.category == 'Soft Skill' %}rgba(124, 58, 237, 0.15); color: var(--accent-secondary)
-                                {% else %}rgba(245, 158, 11, 0.15); color: var(--accent-warning){% endif %};">
-                                {{ skill.category }}
-                            </span>
+                            <span class="badge-info" style="padding: 0.5rem 1rem;">{{ skill.category }}</span>
                         </td>
                         <td style="padding: 1rem;">
-                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(0, 217, 255, 0.15); color: var(--accent-primary); font-weight: 600; font-size: 0.9rem;">
-                                {{ skill.member_count }}
-                            </span>
+                            <span class="badge-success" style="padding: 0.5rem 1rem;">{{ skill.member_count }}</span>
                         </td>
                         <td style="padding: 1rem;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div style="flex: 1; max-width: 100px; height: 20px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--border-color);">
-                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--accent-success), var(--accent-primary)); width: {{ (skill.avg_proficiency / 3 * 100) | int }}%;"></div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="flex: 1; max-width: 110px; height: 24px; background: var(--report-bg-card); border-radius: 6px; overflow: hidden; position: relative; border: 1px solid var(--report-border);">
+                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--report-accent-green), var(--report-accent-cyan)); width: {{ (skill.avg_proficiency / 3 * 100) | int }}%;"></div>
                                 </div>
-                                <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); white-space: nowrap; min-width: 30px;">
+                                <span style="font-weight: 700; font-size: 0.9rem; color: var(--report-text-primary); white-space: nowrap; min-width: 40px;">
                                     {{ "%.1f"|format(skill.avg_proficiency) }}/3
                                 </span>
                             </div>
@@ -405,65 +563,63 @@
             </table>
         </div>
         {% else %}
-        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">No skills data available</p>
+        <p style="text-align: center; color: var(--report-text-muted); padding: 2rem;">No skills data available</p>
         {% endif %}
     </div>
 </div>
 
 <!-- Team Member Statistics -->
-<div class="card">
-    <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color);">
-        <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.75rem;">
-            <i class="fas fa-users" style="color: var(--accent-primary);"></i>
+<div class="report-card">
+    <div style="padding: 1.75rem; border-bottom: 1px solid var(--report-border);">
+        <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--report-text-primary); display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-users" style="color: var(--report-accent-cyan);"></i>
             Team Member Skills Statistics
         </h3>
     </div>
-    <div style="padding: 1.5rem;">
+    <div style="padding: 1.75rem;">
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;" id="memberStatsTable">
-                <thead>
-                    <tr style="border-bottom: 2px solid var(--border-color);">
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Team Member</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Role</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Total Skills</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Average Proficiency</th>
-                        <th style="padding: 1rem; text-align: left; white-space: nowrap;">Skill Coverage</th>
+                <thead style="background: var(--report-bg-card);">
+                    <tr style="border-bottom: 2px solid var(--report-border);">
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Team Member</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Role</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Total Skills</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Average Proficiency</th>
+                        <th style="padding: 1rem; text-align: left; color: var(--report-text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Skill Coverage</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for member in member_stats %}
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <td style="padding: 1rem;"><strong>{{ member.full_name }}</strong></td>
+                    <tr style="border-bottom: 1px solid var(--report-border);">
+                        <td style="padding: 1rem; color: var(--report-text-primary); font-weight: 600;"><strong>{{ member.full_name }}</strong></td>
                         <td style="padding: 1rem;">
-                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(124, 58, 237, 0.15); color: var(--accent-secondary); font-weight: 600; font-size: 0.9rem; white-space: nowrap;">
+                            <span style="padding: 0.5rem 1rem; border-radius: 6px; background: rgba(124, 58, 237, 0.2); color: #a78bfa; border: 1px solid rgba(124, 58, 237, 0.4); font-weight: 600; font-size: 0.875rem; white-space: nowrap;">
                                 {{ member.role }}
                             </span>
                         </td>
                         <td style="padding: 1rem;">
-                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(0, 217, 255, 0.15); color: var(--accent-primary); font-weight: 600; font-size: 0.9rem;">
-                                {{ member.skill_count }}
-                            </span>
+                            <span class="badge-info" style="padding: 0.5rem 1rem;">{{ member.skill_count }}</span>
                         </td>
                         <td style="padding: 1rem;">
                             {% if member.avg_proficiency %}
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div style="flex: 1; max-width: 100px; height: 20px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--border-color);">
-                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-success)); width: {{ (member.avg_proficiency / 3 * 100) | int }}%;"></div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="flex: 1; max-width: 110px; height: 24px; background: var(--report-bg-card); border-radius: 6px; overflow: hidden; position: relative; border: 1px solid var(--report-border);">
+                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--report-accent-cyan), var(--report-accent-green)); width: {{ (member.avg_proficiency / 3 * 100) | int }}%;"></div>
                                 </div>
-                                <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); white-space: nowrap; min-width: 30px;">
+                                <span style="font-weight: 700; font-size: 0.9rem; color: var(--report-text-primary); white-space: nowrap; min-width: 40px;">
                                     {{ "%.1f"|format(member.avg_proficiency) }}/3
                                 </span>
                             </div>
                             {% else %}
-                            <span style="color: var(--text-muted);">No skills</span>
+                            <span style="color: var(--report-text-muted);">No skills</span>
                             {% endif %}
                         </td>
                         <td style="padding: 1rem;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div style="flex: 1; max-width: 150px; height: 20px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid var(--border-color);">
-                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); width: {{ (member.skill_count / top_skills|length * 100)|round if top_skills else 0 }}%;"></div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="flex: 1; max-width: 160px; height: 24px; background: var(--report-bg-card); border-radius: 6px; overflow: hidden; position: relative; border: 1px solid var(--report-border);">
+                                    <div style="position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(90deg, var(--report-accent-blue), var(--report-accent-cyan)); width: {{ (member.skill_count / top_skills|length * 100)|round if top_skills else 0 }}%;"></div>
                                 </div>
-                                <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); white-space: nowrap;">
+                                <span style="font-weight: 700; font-size: 0.9rem; color: var(--report-text-primary); white-space: nowrap;">
                                     {{ member.skill_count }} skills
                                 </span>
                             </div>
@@ -476,243 +632,11 @@
     </div>
 </div>
 
-<!-- MODALS -->
-
-<!-- Risk Analysis Modal -->
-<div class="modal fade" id="riskModal" tabindex="-1" aria-labelledby="riskModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05)); border-color: rgba(239, 68, 68, 0.3);">
-                <h5 class="modal-title" id="riskModalLabel" style="font-weight: 700;">
-                    <i class="fas fa-exclamation-triangle me-2" style="color: var(--accent-danger);"></i>
-                    Business Continuity Risks
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
-                    The following skills represent a <strong>Single Point of Failure</strong>. 
-                    If the primary holder leaves, the company loses this capability.
-                </p>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead style="background: var(--bg-secondary);">
-                            <tr style="border-bottom: 2px solid var(--border-color);">
-                                <th style="padding: 1rem; text-align: left;">Category</th>
-                                <th style="padding: 1rem; text-align: left;">At-Risk Skill</th>
-                                <th style="padding: 1rem; text-align: left;">Current Holder(s)</th>
-                                <th style="padding: 1rem; text-align: left;">Bus Factor</th>
-                                <th style="padding: 1rem; text-align: left;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for risk in risk_report %}
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 1rem;">
-                                    <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: var(--bg-secondary); border: 1px solid var(--border-color); font-size: 0.85rem;">
-                                        {{ risk.category }}
-                                    </span>
-                                </td>
-                                <td style="padding: 1rem; font-weight: 700; color: var(--accent-danger);">
-                                    {{ risk.skill_name }}
-                                </td>
-                                <td style="padding: 1rem;">
-                                    {% if risk.holders %}
-                                        {% for holder in risk.holders %}
-                                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(0, 217, 255, 0.15); color: var(--accent-primary); font-weight: 600; font-size: 0.85rem; margin-right: 0.5rem;">
-                                                {{ holder }}
-                                            </span>
-                                        {% endfor %}
-                                    {% else %}
-                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); font-weight: 600; font-size: 0.85rem;">
-                                            NO ONE (Critical)
-                                        </span>
-                                    {% endif %}
-                                </td>
-                                <td style="padding: 1rem;">
-                                    {% if risk.count == 0 %}
-                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); font-weight: 600; font-size: 0.85rem;">
-                                            0 (Lost)
-                                        </span>
-                                    {% else %}
-                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); font-weight: 600; font-size: 0.85rem;">
-                                            1 (High Risk)
-                                        </span>
-                                    {% endif %}
-                                </td>
-                                <td style="padding: 1rem;">
-                                    <a href="/find-experts" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-user-plus"></i> Assign Backup
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Role Detail Modals -->
-{% for role_id, role in roles_data.items() %}
-<div class="modal fade" id="roleModal{{ role_id }}" tabindex="-1" aria-labelledby="roleModal{{ role_id }}Label" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="roleModal{{ role_id }}Label" style="font-weight: 700;">
-                    <span style="color: var(--text-muted);">Analysis:</span> {{ role.name }}
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div style="margin-bottom: 2rem;">
-                    <h6 style="text-transform: uppercase; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;">
-                        Required Competency Profile
-                    </h6>
-                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                        {% for req in role.requirements %}
-                        <span style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid 
-                            {% if req.cat == 'Technical' %}var(--accent-primary); color: var(--accent-primary)
-                            {% elif req.cat == 'Clinical' %}var(--accent-success); color: var(--accent-success)
-                            {% elif req.cat == 'Regulatory' %}var(--accent-danger); color: var(--accent-danger)
-                            {% else %}var(--accent-warning); color: var(--accent-warning){% endif %}; 
-                            background: transparent; font-weight: 600; font-size: 0.9rem;">
-                            {{ req.name }} <span style="color: var(--text-primary);">(Lvl {{ req.min_lvl }})</span>
-                        </span>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <hr style="border-color: var(--border-color); margin: 2rem 0;">
-
-                <h6 style="text-transform: uppercase; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;">
-                    Staff Compliance Report
-                </h6>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; border: 1px solid var(--border-color);">
-                        <thead style="background: var(--bg-secondary);">
-                            <tr style="border-bottom: 2px solid var(--border-color);">
-                                <th style="padding: 1rem; text-align: left;">Employee</th>
-                                <th style="padding: 1rem; text-align: left;">Fit Score</th>
-                                <th style="padding: 1rem; text-align: left;">Missing / Under-qualified Skills</th>
-                                <th style="padding: 1rem; text-align: left;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for mem in role.members %}
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 1rem; font-weight: 700;">{{ mem.full_name }}</td>
-                                <td style="padding: 1rem;">
-                                    {% if mem.match_pct == 100 %}
-                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: var(--accent-success); font-weight: 600; font-size: 0.9rem;">
-                                            100% Match
-                                        </span>
-                                    {% elif mem.match_pct >= 60 %}
-                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); font-weight: 600; font-size: 0.9rem;">
-                                            {{ mem.match_pct }}% Match
-                                        </span>
-                                    {% else %}
-                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); font-weight: 600; font-size: 0.9rem;">
-                                            {{ mem.match_pct }}% Match
-                                        </span>
-                                    {% endif %}
-                                </td>
-                                <td style="padding: 1rem;">
-                                    {% if mem.missing %}
-                                        {% for miss in mem.missing %}
-                                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(239, 68, 68, 0.1); color: var(--accent-danger); border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.85rem; margin: 0.25rem; display: inline-block;">
-                                                {{ miss }}
-                                            </span>
-                                        {% endfor %}
-                                    {% else %}
-                                        <span style="color: var(--text-muted); font-size: 0.9rem;">None (Fully Qualified)</span>
-                                    {% endif %}
-                                </td>
-                                <td style="padding: 1rem;">
-                                    {% if mem.match_pct < 100 %}
-                                    <a href="/members/{{ mem.mem_id }}/edit" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-user-edit"></i> Update
-                                    </a>
-                                    {% else %}
-                                    <i class="fas fa-check" style="color: var(--accent-success); font-size: 1.25rem;"></i>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <a href="/roles/{{ role_id }}" class="btn btn-primary">Manage Role Definition</a>
-            </div>
-        </div>
-    </div>
-</div>
-{% endfor %}
-
-<!-- Category Detail Modals -->
-{% for cat, data in category_data.items() %}
-<div class="modal fade" id="catModal{{ cat|replace(' ', '') }}" tabindex="-1" aria-labelledby="catModal{{ cat|replace(' ', '') }}Label" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="catModal{{ cat|replace(' ', '') }}Label" style="font-weight: 700;">{{ cat }} Competency Profile</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                    <div style="border-right: 1px solid var(--border-color); padding-right: 2rem;">
-                        <h6 style="text-transform: uppercase; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;">
-                            Top {{ cat }} Experts
-                        </h6>
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            {% for expert in data.top_experts %}
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-secondary); border-radius: 6px;">
-                                <span style="font-weight: 600;">{{ expert.name }}</span>
-                                <span style="padding: 0.25rem 0.75rem; border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: var(--accent-success); font-weight: 600; font-size: 0.85rem;">
-                                    Avg Lvl {{ expert.avg }}
-                                </span>
-                            </div>
-                            {% else %}
-                            <p style="color: var(--text-muted); font-style: italic;">No experts recorded.</p>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <div>
-                        <h6 style="text-transform: uppercase; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;">
-                            Available Capabilities
-                        </h6>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                            {% for skill in data.skills %}
-                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: var(--bg-secondary); border: 1px solid var(--border-color); font-size: 0.85rem;">
-                                {{ skill.skill_name }}
-                            </span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endfor %}
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Stacked Bar Chart Configuration
+// Stacked Bar Chart Configuration with Modern Theme
 const ctx = document.getElementById('stackedBarChart').getContext('2d');
 new Chart(ctx, {
     type: 'bar',
@@ -727,7 +651,9 @@ new Chart(ctx, {
                     {% for stat in category_stats %}{% if stat.category == 'Regulatory' %}{{ stat.level_1 }}{% endif %}{% endfor %},
                     {% for stat in category_stats %}{% if stat.category == 'Soft Skill' %}{{ stat.level_1 }}{% endif %}{% endfor %}
                 ],
-                backgroundColor: '#fbbf24'
+                backgroundColor: '#f59e0b',
+                borderRadius: 6,
+                borderSkipped: false
             },
             {
                 label: 'Intermediate (Lvl 2)',
@@ -737,7 +663,9 @@ new Chart(ctx, {
                     {% for stat in category_stats %}{% if stat.category == 'Regulatory' %}{{ stat.level_2 }}{% endif %}{% endfor %},
                     {% for stat in category_stats %}{% if stat.category == 'Soft Skill' %}{{ stat.level_2 }}{% endif %}{% endfor %}
                 ],
-                backgroundColor: '#60a5fa'
+                backgroundColor: '#3b82f6',
+                borderRadius: 6,
+                borderSkipped: false
             },
             {
                 label: 'Advanced (Lvl 3)',
@@ -747,7 +675,9 @@ new Chart(ctx, {
                     {% for stat in category_stats %}{% if stat.category == 'Regulatory' %}{{ stat.level_3 }}{% endif %}{% endfor %},
                     {% for stat in category_stats %}{% if stat.category == 'Soft Skill' %}{{ stat.level_3 }}{% endif %}{% endfor %}
                 ],
-                backgroundColor: '#34d399'
+                backgroundColor: '#10b981',
+                borderRadius: 6,
+                borderSkipped: false
             }
         ]
     },
@@ -757,31 +687,119 @@ new Chart(ctx, {
         scales: {
             x: { 
                 stacked: true,
-                grid: {
-                    display: false
+                grid: { 
+                    display: false 
+                },
+                ticks: { 
+                    color: '#94a3b8',
+                    font: { size: 13, weight: '600' }
                 }
             },
-            y: { 
+            y: {
                 stacked: true,
-                grid: {
-                    color: 'rgba(255, 255, 255, 0.1)'
+                grid: { 
+                    color: '#2d3748',
+                    drawBorder: false
+                },
+                ticks: { 
+                    color: '#94a3b8',
+                    font: { size: 12 }
                 }
             }
         },
         plugins: {
             legend: {
                 display: true,
-                position: 'top',
+                position: 'bottom',
                 labels: {
                     color: '#94a3b8',
-                    font: {
-                        size: 12
-                    }
+                    padding: 16,
+                    font: { size: 12, weight: '600' },
+                    usePointStyle: true,
+                    pointStyle: 'circle'
                 }
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                backgroundColor: 'rgba(15, 20, 25, 0.95)',
+                titleColor: '#e2e8f0',
+                bodyColor: '#94a3b8',
+                borderColor: '#2d3748',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 8
             }
         }
     }
 });
+
+// Toggle Category Details
+let activeCategory = null;
+function toggleCategory(category) {
+    console.log('toggleCategory called with:', category);
+    const section = document.getElementById('category' + category);
+    const buttons = document.querySelectorAll('.category-btn');
+    
+    if (!section) {
+        console.error('Section not found for category:', category);
+        console.log('Available sections:', document.querySelectorAll('[id^="category"]'));
+        return;
+    }
+    
+    console.log('Found section:', section);
+    
+    if (activeCategory === category) {
+        // Close if clicking the same category
+        section.classList.remove('active');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        activeCategory = null;
+        console.log('Closed category:', category);
+    } else {
+        // Close previous and open new
+        if (activeCategory) {
+            const prevSection = document.getElementById('category' + activeCategory);
+            if (prevSection) {
+                prevSection.classList.remove('active');
+            }
+        }
+        // Remove active class from all buttons and add to clicked one
+        buttons.forEach(btn => {
+            const btnCategory = btn.textContent.trim().replace(/\s+/g, '');
+            if (btnCategory === category) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        section.classList.add('active');
+        activeCategory = category;
+        console.log('Opened category:', category);
+    }
+}
+
+// Toggle Risk Details
+function toggleRisk() {
+    const section = document.getElementById('riskDetails');
+    const btn = document.getElementById('riskToggleBtn');
+    
+    if (!section || !btn) {
+        console.error('Risk section or button not found');
+        return;
+    }
+    
+    if (section.classList.contains('active')) {
+        section.classList.remove('active');
+        btn.classList.remove('active');
+        const btnText = btn.querySelector('span');
+        if (btnText) btnText.textContent = 'View Report';
+    } else {
+        section.classList.add('active');
+        btn.classList.add('active');
+        const btnText = btn.querySelector('span');
+        if (btnText) btnText.textContent = 'Hide Report';
+    }
+}
 
 // Enhanced CSV Export Function
 function exportToCSV() {
@@ -838,11 +856,9 @@ function exportToCSV() {
     
     // Competency Matrix
     csv.push('MASTER COMPETENCY MATRIX');
-    let headerRow = 'Employee,Role{% for skill in heatmap_skills %},{{ skill.skill_name }}{% endfor %}';
-    csv.push(headerRow);
+    csv.push('Employee,Role{% for skill in heatmap_skills %},{{ skill.skill_name }}{% endfor %}');
     {% for member in heatmap_data %}
-    let row = '"{{ member.name }}","{{ member.role }}"{% for skill in heatmap_skills %},{{ member.skills[skill.skill_id] }}{% endfor %}';
-    csv.push(row);
+    csv.push('"{{ member.name }}","{{ member.role }}"{% for skill in heatmap_skills %},{{ member.skills[skill.skill_id] }}{% endfor %}');
     {% endfor %}
     
     // Create and download CSV
