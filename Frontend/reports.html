@@ -2,6 +2,80 @@
 
 {% block title %}Reports - Team Skills Management{% endblock %}
 
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .metric-card { 
+        border-left: 4px solid var(--accent-primary); 
+        transition: transform 0.2s;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Heatmap Styles */
+    .matrix-cell { 
+        text-align: center; 
+        font-weight: bold; 
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        min-width: 80px;
+    }
+    
+    .lvl-0 { 
+        background: rgba(255,255,255,0.02); 
+        color: var(--text-muted);
+    }
+    .lvl-1 { 
+        background: rgba(245, 158, 11, 0.2); 
+        color: #fbbf24; 
+    }
+    .lvl-2 { 
+        background: rgba(59, 130, 246, 0.2); 
+        color: #60a5fa; 
+    }
+    .lvl-3 { 
+        background: rgba(16, 185, 129, 0.2); 
+        color: #34d399; 
+    }
+    
+    /* Clickable elements */
+    .clickable-card {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .clickable-card:hover {
+        transform: scale(1.01);
+        box-shadow: 0 8px 16px rgba(0, 217, 255, 0.2);
+    }
+    
+    /* Modal custom styles */
+    .modal-content {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .modal-footer {
+        border-top: 1px solid var(--border-color);
+    }
+    
+    /* Fix close button visibility in dark theme */
+    .btn-close {
+        filter: invert(1);
+        opacity: 0.8;
+    }
+    
+    .btn-close:hover {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 250px;">
@@ -17,6 +91,213 @@
     </button>
 </div>
 
+<!-- KPI Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="card metric-card" style="padding: 1.5rem;">
+        <h6 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 0.5rem;">Total Staff</h6>
+        <h2 style="font-size: 2.5rem; font-weight: 700; margin: 0;">{{ total_staff }}</h2>
+    </div>
+    <div class="card metric-card" style="padding: 1.5rem; border-left-color: var(--accent-success);">
+        <h6 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 0.5rem;">Compliance Rate</h6>
+        <h2 style="font-size: 2.5rem; font-weight: 700; margin: 0; color: var(--accent-success);">{{ compliance_rate }}%</h2>
+    </div>
+    <div class="card metric-card" style="padding: 1.5rem; border-left-color: var(--accent-danger);">
+        <h6 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 0.5rem;">Critical Gaps</h6>
+        <h2 style="font-size: 2.5rem; font-weight: 700; margin: 0; color: var(--accent-danger);">{{ critical_gaps }}</h2>
+    </div>
+    <div class="card metric-card" style="padding: 1.5rem; border-left-color: var(--accent-warning);">
+        <h6 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; margin-bottom: 0.5rem;">Skills at Risk</h6>
+        <h2 style="font-size: 2.5rem; font-weight: 700; margin: 0; color: var(--accent-warning);">{{ skills_at_risk }}</h2>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Stacked Bar Chart -->
+    <div class="card">
+        <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0;">
+                <i class="fas fa-chart-bar" style="color: var(--accent-primary);"></i>
+                Talent Depth by Category
+            </h3>
+            <div style="display: flex; gap: 0.5rem;">
+                {% for cat in ['Technical', 'Clinical', 'Regulatory', 'Soft Skill'] %}
+                <button class="btn btn-sm" style="background: rgba(0, 217, 255, 0.1); border: 1px solid var(--border-color);" 
+                        data-bs-toggle="modal" data-bs-target="#catModal{{ cat|replace(' ', '') }}">
+                    {{ cat }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        <div style="padding: 1.5rem;">
+            <div style="height: 300px;">
+                <canvas id="stackedBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Health Leaderboard -->
+    <div class="card">
+        <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color);">
+            <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0;">
+                <i class="fas fa-heartbeat" style="color: var(--accent-success);"></i>
+                Role Health
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.5rem 0 0 0;">Top concerns</p>
+        </div>
+        <div style="padding: 0;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="padding: 1rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">Role</th>
+                        <th style="padding: 1rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">Staff</th>
+                        <th style="padding: 1rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">Health</th>
+                        <th style="padding: 1rem;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set ns = namespace(count=0) %}
+                    {% for role_id, role in roles_data.items() %}
+                    {% if role.members and role.members|length > 0 %}
+                    {% set avg_fit = role.members|map(attribute='match_pct')|sum / role.members|length %}
+                    {% if avg_fit < 100 and ns.count < 5 %}
+                    {% set ns.count = ns.count + 1 %}
+                    <tr style="border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s;" 
+                        data-bs-toggle="modal" data-bs-target="#roleModal{{ role_id }}"
+                        onmouseover="this.style.background='rgba(0, 217, 255, 0.05)'"
+                        onmouseout="this.style.background='transparent'">
+                        <td style="padding: 1rem;"><strong>{{ role.name }}</strong></td>
+                        <td style="padding: 1rem;">{{ role.members|length }}</td>
+                        <td style="padding: 1rem;">
+                            {% if avg_fit >= 80 %}
+                                <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: var(--accent-success); font-weight: 600; font-size: 0.9rem;">
+                                    {{ avg_fit|round|int }}%
+                                </span>
+                            {% elif avg_fit >= 50 %}
+                                <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); font-weight: 600; font-size: 0.9rem;">
+                                    {{ avg_fit|round|int }}%
+                                </span>
+                            {% else %}
+                                <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); font-weight: 600; font-size: 0.9rem;">
+                                    {{ avg_fit|round|int }}%
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem; color: var(--text-muted);">
+                            <i class="fas fa-chevron-right"></i>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                    {% if ns.count == 0 %}
+                    <tr>
+                        <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--accent-success);"></i>
+                            <p style="margin: 0;">All roles are healthy! (100% compliance)</p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Alert Banner -->
+{% if risk_report %}
+<div class="clickable-card" 
+     style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05)); 
+            border: 1px solid rgba(239, 68, 68, 0.3); 
+            border-radius: 8px; 
+            padding: 1.5rem; 
+            margin-bottom: 2rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 1.5rem;"
+     data-bs-toggle="modal" data-bs-target="#riskModal">
+    <div style="background: rgba(239, 68, 68, 0.2); 
+                border-radius: 50%; 
+                padding: 1rem; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center;
+                min-width: 60px;
+                height: 60px;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--accent-danger);"></i>
+    </div>
+    <div style="flex: 1;">
+        <h5 style="font-weight: 700; margin-bottom: 0.5rem; color: var(--accent-danger);">
+            Critical Resource Risk ("Bus Factor")
+        </h5>
+        <p style="margin: 0; color: var(--text-primary);">
+            Detected <strong>{{ risk_report|length }} skills</strong> held by fewer than 2 employees. 
+            <span style="text-decoration: underline; font-weight: 600;">Click to view Business Continuity Report.</span>
+        </p>
+    </div>
+    <i class="fas fa-chevron-right" style="font-size: 1.5rem; color: var(--accent-danger);"></i>
+</div>
+{% endif %}
+
+<!-- Master Competency Matrix (Heatmap) -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 1.75rem; font-weight: 600; margin: 0;">
+            <i class="fas fa-th" style="color: var(--accent-primary);"></i>
+            Master Competency Matrix
+        </h3>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <span style="font-size: 0.9rem; color: var(--text-muted);">Legend:</span>
+            <span style="padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 0.85rem; font-weight: 600;">1: Basic</span>
+            <span style="padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; font-size: 0.85rem; font-weight: 600;">2: Intermediate</span>
+            <span style="padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.85rem; font-weight: 600;">3: Advanced</span>
+        </div>
+    </div>
+    <div style="padding: 0;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: var(--bg-secondary);">
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem; text-align: left; position: sticky; left: 0; background: var(--bg-secondary); z-index: 10; min-width: 150px;">
+                            Employee
+                        </th>
+                        <th style="padding: 1rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">Role</th>
+                        {% for skill in heatmap_skills %}
+                        <th style="padding: 1rem; text-align: center; font-size: 0.85rem; color: var(--text-muted); writing-mode: vertical-rl; transform: rotate(180deg); min-width: 60px;">
+                            <span title="{{ skill.skill_name }}">{{ skill.skill_name }}</span>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in heatmap_data %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 1rem; font-weight: 600; position: sticky; left: 0; background: var(--bg-primary); z-index: 5;">
+                            {{ member.name }}
+                        </td>
+                        <td style="padding: 1rem;">
+                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(124, 58, 237, 0.15); color: var(--accent-secondary); font-weight: 600; font-size: 0.85rem; white-space: nowrap;">
+                                {{ member.role }}
+                            </span>
+                        </td>
+                        {% for skill in heatmap_skills %}
+                        <td class="matrix-cell lvl-{{ member.skills[skill.skill_id] }}">
+                            {% if member.skills[skill.skill_id] > 0 %}
+                                {{ member.skills[skill.skill_id] }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Original Reports Tables (kept for export functionality) -->
 <!-- Skills by Category -->
 <div class="card" style="margin-bottom: 2rem;">
     <div style="padding: 1.5rem; border-bottom: 2px solid var(--border-color);">
@@ -194,23 +475,353 @@
         </div>
     </div>
 </div>
+
+<!-- MODALS -->
+
+<!-- Risk Analysis Modal -->
+<div class="modal fade" id="riskModal" tabindex="-1" aria-labelledby="riskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05)); border-color: rgba(239, 68, 68, 0.3);">
+                <h5 class="modal-title" id="riskModalLabel" style="font-weight: 700;">
+                    <i class="fas fa-exclamation-triangle me-2" style="color: var(--accent-danger);"></i>
+                    Business Continuity Risks
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                    The following skills represent a <strong>Single Point of Failure</strong>. 
+                    If the primary holder leaves, the company loses this capability.
+                </p>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: var(--bg-secondary);">
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 1rem; text-align: left;">Category</th>
+                                <th style="padding: 1rem; text-align: left;">At-Risk Skill</th>
+                                <th style="padding: 1rem; text-align: left;">Current Holder(s)</th>
+                                <th style="padding: 1rem; text-align: left;">Bus Factor</th>
+                                <th style="padding: 1rem; text-align: left;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for risk in risk_report %}
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 1rem;">
+                                    <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: var(--bg-secondary); border: 1px solid var(--border-color); font-size: 0.85rem;">
+                                        {{ risk.category }}
+                                    </span>
+                                </td>
+                                <td style="padding: 1rem; font-weight: 700; color: var(--accent-danger);">
+                                    {{ risk.skill_name }}
+                                </td>
+                                <td style="padding: 1rem;">
+                                    {% if risk.holders %}
+                                        {% for holder in risk.holders %}
+                                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(0, 217, 255, 0.15); color: var(--accent-primary); font-weight: 600; font-size: 0.85rem; margin-right: 0.5rem;">
+                                                {{ holder }}
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); font-weight: 600; font-size: 0.85rem;">
+                                            NO ONE (Critical)
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 1rem;">
+                                    {% if risk.count == 0 %}
+                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); font-weight: 600; font-size: 0.85rem;">
+                                            0 (Lost)
+                                        </span>
+                                    {% else %}
+                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); font-weight: 600; font-size: 0.85rem;">
+                                            1 (High Risk)
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <a href="/find-experts" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-user-plus"></i> Assign Backup
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Detail Modals -->
+{% for role_id, role in roles_data.items() %}
+<div class="modal fade" id="roleModal{{ role_id }}" tabindex="-1" aria-labelledby="roleModal{{ role_id }}Label" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleModal{{ role_id }}Label" style="font-weight: 700;">
+                    <span style="color: var(--text-muted);">Analysis:</span> {{ role.name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 2rem;">
+                    <h6 style="text-transform: uppercase; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;">
+                        Required Competency Profile
+                    </h6>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                        {% for req in role.requirements %}
+                        <span style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid 
+                            {% if req.cat == 'Technical' %}var(--accent-primary); color: var(--accent-primary)
+                            {% elif req.cat == 'Clinical' %}var(--accent-success); color: var(--accent-success)
+                            {% elif req.cat == 'Regulatory' %}var(--accent-danger); color: var(--accent-danger)
+                            {% else %}var(--accent-warning); color: var(--accent-warning){% endif %}; 
+                            background: transparent; font-weight: 600; font-size: 0.9rem;">
+                            {{ req.name }} <span style="color: var(--text-primary);">(Lvl {{ req.min_lvl }})</span>
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 2rem 0;">
+
+                <h6 style="text-transform: uppercase; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;">
+                    Staff Compliance Report
+                </h6>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; border: 1px solid var(--border-color);">
+                        <thead style="background: var(--bg-secondary);">
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 1rem; text-align: left;">Employee</th>
+                                <th style="padding: 1rem; text-align: left;">Fit Score</th>
+                                <th style="padding: 1rem; text-align: left;">Missing / Under-qualified Skills</th>
+                                <th style="padding: 1rem; text-align: left;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mem in role.members %}
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 1rem; font-weight: 700;">{{ mem.full_name }}</td>
+                                <td style="padding: 1rem;">
+                                    {% if mem.match_pct == 100 %}
+                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: var(--accent-success); font-weight: 600; font-size: 0.9rem;">
+                                            100% Match
+                                        </span>
+                                    {% elif mem.match_pct >= 60 %}
+                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); font-weight: 600; font-size: 0.9rem;">
+                                            {{ mem.match_pct }}% Match
+                                        </span>
+                                    {% else %}
+                                        <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); font-weight: 600; font-size: 0.9rem;">
+                                            {{ mem.match_pct }}% Match
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 1rem;">
+                                    {% if mem.missing %}
+                                        {% for miss in mem.missing %}
+                                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: rgba(239, 68, 68, 0.1); color: var(--accent-danger); border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.85rem; margin: 0.25rem; display: inline-block;">
+                                                {{ miss }}
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span style="color: var(--text-muted); font-size: 0.9rem;">None (Fully Qualified)</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 1rem;">
+                                    {% if mem.match_pct < 100 %}
+                                    <a href="/members/{{ mem.mem_id }}/edit" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-user-edit"></i> Update
+                                    </a>
+                                    {% else %}
+                                    <i class="fas fa-check" style="color: var(--accent-success); font-size: 1.25rem;"></i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="/roles/{{ role_id }}" class="btn btn-primary">Manage Role Definition</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Category Detail Modals -->
+{% for cat, data in category_data.items() %}
+<div class="modal fade" id="catModal{{ cat|replace(' ', '') }}" tabindex="-1" aria-labelledby="catModal{{ cat|replace(' ', '') }}Label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="catModal{{ cat|replace(' ', '') }}Label" style="font-weight: 700;">{{ cat }} Competency Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div style="border-right: 1px solid var(--border-color); padding-right: 2rem;">
+                        <h6 style="text-transform: uppercase; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;">
+                            Top {{ cat }} Experts
+                        </h6>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            {% for expert in data.top_experts %}
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-secondary); border-radius: 6px;">
+                                <span style="font-weight: 600;">{{ expert.name }}</span>
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: var(--accent-success); font-weight: 600; font-size: 0.85rem;">
+                                    Avg Lvl {{ expert.avg }}
+                                </span>
+                            </div>
+                            {% else %}
+                            <p style="color: var(--text-muted); font-style: italic;">No experts recorded.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h6 style="text-transform: uppercase; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;">
+                            Available Capabilities
+                        </h6>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            {% for skill in data.skills %}
+                            <span style="padding: 0.375rem 0.75rem; border-radius: 6px; background: var(--bg-secondary); border: 1px solid var(--border-color); font-size: 0.85rem;">
+                                {{ skill.skill_name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// Stacked Bar Chart Configuration
+const ctx = document.getElementById('stackedBarChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Technical', 'Clinical', 'Regulatory', 'Soft Skills'],
+        datasets: [
+            {
+                label: 'Basic (Lvl 1)',
+                data: [
+                    {% for stat in category_stats %}{% if stat.category == 'Technical' %}{{ stat.level_1 }}{% endif %}{% endfor %},
+                    {% for stat in category_stats %}{% if stat.category == 'Clinical' %}{{ stat.level_1 }}{% endif %}{% endfor %},
+                    {% for stat in category_stats %}{% if stat.category == 'Regulatory' %}{{ stat.level_1 }}{% endif %}{% endfor %},
+                    {% for stat in category_stats %}{% if stat.category == 'Soft Skill' %}{{ stat.level_1 }}{% endif %}{% endfor %}
+                ],
+                backgroundColor: '#fbbf24'
+            },
+            {
+                label: 'Intermediate (Lvl 2)',
+                data: [
+                    {% for stat in category_stats %}{% if stat.category == 'Technical' %}{{ stat.level_2 }}{% endif %}{% endfor %},
+                    {% for stat in category_stats %}{% if stat.category == 'Clinical' %}{{ stat.level_2 }}{% endif %}{% endfor %},
+                    {% for stat in category_stats %}{% if stat.category == 'Regulatory' %}{{ stat.level_2 }}{% endif %}{% endfor %},
+                    {% for stat in category_stats %}{% if stat.category == 'Soft Skill' %}{{ stat.level_2 }}{% endif %}{% endfor %}
+                ],
+                backgroundColor: '#60a5fa'
+            },
+            {
+                label: 'Advanced (Lvl 3)',
+                data: [
+                    {% for stat in category_stats %}{% if stat.category == 'Technical' %}{{ stat.level_3 }}{% endif %}{% endfor %},
+                    {% for stat in category_stats %}{% if stat.category == 'Clinical' %}{{ stat.level_3 }}{% endif %}{% endfor %},
+                    {% for stat in category_stats %}{% if stat.category == 'Regulatory' %}{{ stat.level_3 }}{% endif %}{% endfor %},
+                    {% for stat in category_stats %}{% if stat.category == 'Soft Skill' %}{{ stat.level_3 }}{% endif %}{% endfor %}
+                ],
+                backgroundColor: '#34d399'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { 
+                stacked: true,
+                grid: {
+                    display: false
+                }
+            },
+            y: { 
+                stacked: true,
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    color: '#94a3b8',
+                    font: {
+                        size: 12
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Enhanced CSV Export Function
 function exportToCSV() {
     let csv = [];
+    const date = new Date().toISOString().split('T')[0];
+    
+    // Header
+    csv.push('Team Skills Management Report');
+    csv.push(`Generated on: ${date}`);
+    csv.push('');
+    
+    // KPIs
+    csv.push('KEY PERFORMANCE INDICATORS');
+    csv.push('Metric,Value');
+    csv.push('"Total Staff",{{ total_staff }}');
+    csv.push('"Compliance Rate","{{ compliance_rate }}%"');
+    csv.push('"Critical Gaps",{{ critical_gaps }}');
+    csv.push('"Skills at Risk",{{ skills_at_risk }}');
+    csv.push('');
+    
+    // Risk Report
+    {% if risk_report %}
+    csv.push('BUSINESS CONTINUITY RISKS');
+    csv.push('Category,Skill Name,Current Holders,Bus Factor');
+    {% for risk in risk_report %}
+    csv.push('"{{ risk.category }}","{{ risk.skill_name }}","{% for holder in risk.holders %}{{ holder }}{% if not loop.last %}, {% endif %}{% endfor %}",{{ risk.count }}');
+    {% endfor %}
+    csv.push('');
+    {% endif %}
     
     // Skills Distribution by Category
-    csv.push('Skills Distribution by Category');
-    csv.push('Category,Total Skills,Members with Skills,Distribution %');
+    csv.push('SKILLS DISTRIBUTION BY CATEGORY');
+    csv.push('Category,Total Skills,Members with Skills,Level 1,Level 2,Level 3,Distribution %');
     {% for stat in category_stats %}
-    csv.push('"{{ stat.category }}",{{ stat.skill_count }},{{ stat.members_with_skills }},{{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}');
+    csv.push('"{{ stat.category }}",{{ stat.skill_count }},{{ stat.members_with_skills }},{{ stat.level_1 }},{{ stat.level_2 }},{{ stat.level_3 }},{{ (stat.skill_count / category_stats|sum(attribute='skill_count') * 100)|round }}');
     {% endfor %}
     csv.push('');
     
     // Top 10 Most Common Skills
-    csv.push('Top 10 Most Common Skills');
+    csv.push('TOP 10 MOST COMMON SKILLS');
     csv.push('Rank,Skill Name,Category,Team Members,Avg Proficiency');
     {% for skill in top_skills %}
     csv.push('{{ loop.index }},"{{ skill.skill_name }}","{{ skill.category }}",{{ skill.member_count }},{{ "%.1f"|format(skill.avg_proficiency) }}');
@@ -218,10 +829,20 @@ function exportToCSV() {
     csv.push('');
     
     // Team Member Skills Statistics
-    csv.push('Team Member Skills Statistics');
+    csv.push('TEAM MEMBER SKILLS STATISTICS');
     csv.push('Team Member,Role,Total Skills,Average Proficiency');
     {% for member in member_stats %}
     csv.push('"{{ member.full_name }}","{{ member.role }}",{{ member.skill_count }},{% if member.avg_proficiency %}{{ "%.1f"|format(member.avg_proficiency) }}{% else %}0{% endif %}');
+    {% endfor %}
+    csv.push('');
+    
+    // Competency Matrix
+    csv.push('MASTER COMPETENCY MATRIX');
+    let headerRow = 'Employee,Role{% for skill in heatmap_skills %},{{ skill.skill_name }}{% endfor %}';
+    csv.push(headerRow);
+    {% for member in heatmap_data %}
+    let row = '"{{ member.name }}","{{ member.role }}"{% for skill in heatmap_skills %},{{ member.skills[skill.skill_id] }}{% endfor %}';
+    csv.push(row);
     {% endfor %}
     
     // Create and download CSV
@@ -229,7 +850,6 @@ function exportToCSV() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    const date = new Date().toISOString().split('T')[0];
     
     link.setAttribute('href', url);
     link.setAttribute('download', `team-skills-report-${date}.csv`);

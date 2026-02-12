@@ -1559,24 +1559,242 @@ def audit_logs():
 @app.route('/reports')
 @handle_db_error
 def reports():
-    """Generate various reports"""
+    """Generate comprehensive analytics reports with drill-down capabilities"""
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     
-    # Skills by category
+    # === FETCH ALL RAW DATA (Optimized queries) ===
+    
+    # A. Members & Roles
     cursor.execute("""
-        SELECT 
-            category,
-            COUNT(*) as skill_count,
-            COUNT(DISTINCT ms.mem_id) as members_with_skills
+        SELECT tm.mem_id, tm.first_name, tm.middle_name, tm.last_name, 
+               tm.email, r.role_id, r.role_name 
+        FROM team_members tm 
+        LEFT JOIN roles r ON tm.role_id = r.role_id
+    """)
+    members = cursor.fetchall()
+    
+    # B. All Skills
+    cursor.execute("SELECT * FROM skills ORDER BY category, skill_name")
+    skills = cursor.fetchall()
+    
+    # C. All Skill Assignments (The Matrix Data)
+    cursor.execute("""
+        SELECT ms.mem_id, ms.skill_id, ms.proficiency_level, 
+               s.skill_name, s.category, 
+               CONCAT_WS(' ', tm.first_name, NULLIF(tm.middle_name, ''), tm.last_name) as holder_name
+        FROM mem_skills ms
+        JOIN skills s ON ms.skill_id = s.skill_id
+        JOIN team_members tm ON ms.mem_id = tm.mem_id
+    """)
+    assignments = cursor.fetchall()
+    
+    # D. Role Requirements
+    cursor.execute("""
+        SELECT rr.role_id, rr.skill_id, rr.min_proficiency_required,
+               s.skill_name, s.category
+        FROM role_requirements rr
+        JOIN skills s ON rr.skill_id = s.skill_id
+    """)
+    role_requirements = cursor.fetchall()
+    
+    # === PROCESS DATA IN PYTHON (More efficient than complex SQL) ===
+    
+    # Initialize data structures
+    skill_holders = {}  # {skill_id: [list of holder names]}
+    category_data = {}  # {Category: {skills: [], experts: {}, levels: {1:count, 2:count, 3:count}}}
+    member_skills_map = {}  # {mem_id: {skill_id: proficiency_level}}
+    role_req_map = {}  # {role_id: {skill_id: min_proficiency}}
+    
+    # Initialize categories
+    for cat in ['Technical', 'Clinical', 'Regulatory', 'Soft Skill']:
+        category_data[cat] = {
+            'skills': [],
+            'experts': {},
+            'levels': {1: 0, 2: 0, 3: 0},
+            'total_count': 0
+        }
+    
+    # Process assignments for various analytics
+    for row in assignments:
+        sid = row['skill_id']
+        mid = row['mem_id']
+        prof = row['proficiency_level']
+        cat = row['category']
+        
+        # For Risk Analysis
+        if sid not in skill_holders:
+            skill_holders[sid] = []
+        skill_holders[sid].append(row['holder_name'])
+        
+        # For Category Analysis
+        if mid not in category_data[cat]['experts']:
+            category_data[cat]['experts'][mid] = {
+                'name': row['holder_name'],
+                'total_lvl': 0,
+                'count': 0
+            }
+        category_data[cat]['experts'][mid]['total_lvl'] += prof
+        category_data[cat]['experts'][mid]['count'] += 1
+        category_data[cat]['levels'][prof] += 1
+        category_data[cat]['total_count'] += 1
+        
+        # For Member Skills Map (used in role compliance)
+        if mid not in member_skills_map:
+            member_skills_map[mid] = {}
+        member_skills_map[mid][sid] = prof
+    
+    # Process role requirements
+    for req in role_requirements:
+        role_id = req['role_id']
+        if role_id not in role_req_map:
+            role_req_map[role_id] = {
+                'requirements': {},
+                'req_list': []
+            }
+        role_req_map[role_id]['requirements'][req['skill_id']] = req['min_proficiency_required']
+        role_req_map[role_id]['req_list'].append({
+            'skill_id': req['skill_id'],
+            'name': req['skill_name'],
+            'cat': req['category'],
+            'min_lvl': req['min_proficiency_required']
+        })
+    
+    # === 1. GENERATE RISK REPORT (Bus Factor Analysis) ===
+    risk_report = []
+    for skill in skills:
+        sid = skill['skill_id']
+        holders = skill_holders.get(sid, [])
+        count = len(holders)
+        
+        if count < 2:  # RISK CRITERIA: Less than 2 people
+            risk_report.append({
+                'category': skill['category'],
+                'skill_name': skill['skill_name'],
+                'skill_id': sid,
+                'count': count,
+                'holders': holders
+            })
+    
+    # === 2. GENERATE CATEGORY BREAKDOWN ===
+    for cat in category_data:
+        # Calculate top experts by average proficiency
+        expert_list = []
+        for mid, data in category_data[cat]['experts'].items():
+            avg = data['total_lvl'] / data['count']
+            expert_list.append({
+                'name': data['name'],
+                'avg': round(avg, 1),
+                'skills': data['count']
+            })
+        category_data[cat]['top_experts'] = sorted(expert_list, key=lambda x: x['avg'], reverse=True)[:5]
+        
+        # Add skill list for this category
+        category_data[cat]['skills'] = [s for s in skills if s['category'] == cat]
+    
+    # === 3. GENERATE ROLE HEALTH ANALYSIS ===
+    roles_data = {}
+    for member in members:
+        role_id = member['role_id']
+        if not role_id:
+            continue
+            
+        mem_id = member['mem_id']
+        full_name = f"{member['first_name']} {member.get('middle_name', '') or ''} {member['last_name']}".replace('  ', ' ')
+        
+        if role_id not in roles_data:
+            roles_data[role_id] = {
+                'name': member['role_name'],
+                'members': [],
+                'requirements': role_req_map.get(role_id, {'requirements': {}, 'req_list': []})['req_list']
+            }
+        
+        # Calculate member's compliance with role
+        requirements = role_req_map.get(role_id, {'requirements': {}})['requirements']
+        member_skills = member_skills_map.get(mem_id, {})
+        
+        missing = []
+        met = 0
+        total_req = len(requirements)
+        
+        for skill_id, min_prof in requirements.items():
+            if skill_id in member_skills and member_skills[skill_id] >= min_prof:
+                met += 1
+            else:
+                # Find skill name
+                skill_name = next((s['skill_name'] for s in skills if s['skill_id'] == skill_id), 'Unknown')
+                missing.append(skill_name)
+        
+        match_pct = round((met / total_req * 100) if total_req > 0 else 100)
+        
+        roles_data[role_id]['members'].append({
+            'mem_id': mem_id,
+            'full_name': full_name,
+            'match_pct': match_pct,
+            'missing': missing
+        })
+    
+    # === 4. HEATMAP DATA (Members vs Top Skills) ===
+    # Select top 15 most common skills for the heatmap
+    cursor.execute("""
+        SELECT s.skill_id, s.skill_name, s.category,
+               COUNT(ms.mem_id) as member_count
         FROM skills s
         LEFT JOIN mem_skills ms ON s.skill_id = ms.skill_id
-        GROUP BY category
-        ORDER BY category
+        GROUP BY s.skill_id
+        ORDER BY member_count DESC, s.skill_name
+        LIMIT 15
     """)
-    category_stats = cursor.fetchall()
+    heatmap_skills = cursor.fetchall()
     
-    # Top skills (most common)
+    heatmap_data = []
+    for member in members:
+        mem_id = member['mem_id']
+        full_name = f"{member['first_name']} {member.get('middle_name', '') or ''} {member['last_name']}".replace('  ', ' ')
+        
+        row = {
+            'mem_id': mem_id,
+            'name': full_name,
+            'role': member['role_name'] or 'Unassigned',
+            'skills': {}
+        }
+        
+        for skill in heatmap_skills:
+            skill_id = skill['skill_id']
+            row['skills'][skill_id] = member_skills_map.get(mem_id, {}).get(skill_id, 0)
+        
+        heatmap_data.append(row)
+    
+    # === 5. KPI CALCULATIONS ===
+    total_staff = len(members)
+    total_skills = len(skills)
+    total_assignments = len(assignments)
+    
+    # Calculate overall compliance rate
+    total_members_with_roles = len([m for m in members if m['role_id']])
+    compliant_count = 0
+    for role_id, role_data in roles_data.items():
+        for member in role_data['members']:
+            if member['match_pct'] >= 80:
+                compliant_count += 1
+    
+    compliance_rate = round((compliant_count / total_members_with_roles * 100) if total_members_with_roles > 0 else 0)
+    critical_gaps = len([r for r in roles_data.values() if r['members'] and any(m['match_pct'] < 60 for m in r['members'])])
+    skills_at_risk = len(risk_report)
+    
+    # === 6. CATEGORY STATS FOR CHARTS ===
+    category_stats = []
+    for cat, data in category_data.items():
+        category_stats.append({
+            'category': cat,
+            'skill_count': len(data['skills']),
+            'members_with_skills': len(data['experts']),
+            'level_1': data['levels'][1],
+            'level_2': data['levels'][2],
+            'level_3': data['levels'][3]
+        })
+    
+    # === 7. TOP SKILLS ===
     cursor.execute("""
         SELECT 
             s.skill_name,
@@ -1587,48 +1805,50 @@ def reports():
         LEFT JOIN mem_skills ms ON s.skill_id = ms.skill_id
         GROUP BY s.skill_id
         HAVING member_count > 0
-        ORDER BY member_count DESC
+        ORDER BY member_count DESC, avg_proficiency DESC
         LIMIT 10
     """)
     top_skills = cursor.fetchall()
     
-    # Members by skill count
-    cursor.execute("""
-        SELECT 
-            CONCAT_WS(' ', tm.first_name, NULLIF(tm.middle_name, ''), tm.last_name) AS full_name,
-            r.role_name AS role,
-            COUNT(ms.skill_id) as skill_count,
-            AVG(ms.proficiency_level) as avg_proficiency
-        FROM team_members tm
-        LEFT JOIN roles r ON tm.role_id = r.role_id
-        LEFT JOIN mem_skills ms ON tm.mem_id = ms.mem_id
-        GROUP BY tm.mem_id, r.role_name
-        ORDER BY skill_count DESC
-    """)
-    member_stats = cursor.fetchall()
+    # === 8. MEMBER STATS ===
+    member_stats = []
+    for member in members:
+        mem_id = member['mem_id']
+        full_name = f"{member['first_name']} {member.get('middle_name', '') or ''} {member['last_name']}".replace('  ', ' ')
+        
+        member_skills = member_skills_map.get(mem_id, {})
+        skill_count = len(member_skills)
+        avg_prof = round(sum(member_skills.values()) / skill_count, 1) if skill_count > 0 else 0
+        
+        member_stats.append({
+            'full_name': full_name,
+            'role': member['role_name'] or 'Unassigned',
+            'skill_count': skill_count,
+            'avg_proficiency': avg_prof
+        })
     
-    # Role requirements summary
-    cursor.execute("""
-        SELECT 
-            r.role_name,
-            COUNT(rr.skill_id) as required_skills,
-            COUNT(DISTINCT tm.mem_id) as current_members
-        FROM roles r
-        LEFT JOIN role_requirements rr ON r.role_id = rr.role_id
-        LEFT JOIN team_members tm ON r.role_id = tm.role_id
-        GROUP BY r.role_id
-        ORDER BY r.role_name
-    """)
-    role_stats = cursor.fetchall()
+    member_stats.sort(key=lambda x: x['skill_count'], reverse=True)
     
     cursor.close()
     connection.close()
     
     return render_template('reports.html',
+                         # KPIs
+                         total_staff=total_staff,
+                         compliance_rate=compliance_rate,
+                         critical_gaps=critical_gaps,
+                         skills_at_risk=skills_at_risk,
+                         # Charts & Tables
                          category_stats=category_stats,
                          top_skills=top_skills,
                          member_stats=member_stats,
-                         role_stats=role_stats)
+                         # Drill-down data
+                         risk_report=risk_report,
+                         category_data=category_data,
+                         roles_data=roles_data,
+                         # Heatmap
+                         heatmap_skills=heatmap_skills,
+                         heatmap_data=heatmap_data)
 
 @app.route('/reports/user-skills')
 @handle_db_error

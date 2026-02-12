@@ -1,8 +1,17 @@
-.env
+# Python
 venv/
-DBvenv/
 __pycache__/
 *.pyc
-.pytest_cache/
-.coverage
-htmlcov/
+
+# Environment
+.env
+
+# Node (if any)
+node_modules/
+
+# VS Code
+.vscode/
+
+# System
+.DS_Store
+Thumbs.db
